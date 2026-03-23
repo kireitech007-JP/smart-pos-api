@@ -1,17 +1,35 @@
 import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { formatRupiah } from '@/lib/format';
-import { DollarSign, X, Plus } from 'lucide-react';
+import { DollarSign, X, Plus, Clock, User } from 'lucide-react';
 import { toast } from 'sonner';
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 export default function CashIn() {
-  const { currentUser, units, addCashIn, getActiveSession } = useApp();
+  const { currentUser, units, addCashIn, getActiveSession, cashIns } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [depositorName, setDepositorName] = useState('');
 
   const activeSession = currentUser ? getActiveSession(currentUser.id) : null;
+  
+  // Get cash in history for current session
+  const sessionCashIns = activeSession 
+    ? cashIns.filter(c => activeSession.cashIns?.includes(c.id))
+    : [];
+  
+  const totalSessionCashIn = sessionCashIns.reduce((sum, c) => sum + c.amount, 0);
 
   if (!activeSession) {
     return (
@@ -161,6 +179,49 @@ export default function CashIn() {
           </form>
         </div>
       )}
+
+      {/* Cash In History */}
+      <div className="border-t border-border">
+        <div className="p-6 border-b border-border bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
+              <h4 className="font-bold text-foreground">Riwayat Kas Masuk Sesi Ini</h4>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-lg font-bold text-green-600">{formatRupiah(totalSessionCashIn)}</p>
+            </div>
+          </div>
+        </div>
+        {sessionCashIns.length > 0 ? (
+          <div className="divide-y divide-border">
+            {sessionCashIns.map(cashIn => (
+              <div key={cashIn.id} className="p-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium text-foreground">{cashIn.depositorName}</span>
+                      <span className="text-xs text-muted-foreground">• {formatDate(cashIn.date)}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{cashIn.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-green-600">{formatRupiah(cashIn.amount)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Belum ada kas masuk dalam sesi ini</p>
+            <p className="text-xs mt-1">Tambahkan kas masuk untuk melihat riwayatnya di sini</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
