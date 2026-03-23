@@ -3,6 +3,7 @@ import { useApp } from '@/contexts/AppContext';
 import { formatRupiah, isToday, isThisWeek, isThisMonth } from '@/lib/format';
 import { FileText, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import ExportButtons from '@/components/ExportButtons';
 
 export default function AdminReports() {
   const { transactions, expenses, units } = useApp();
@@ -33,6 +34,14 @@ export default function AdminReports() {
   });
 
   const periodLabels = { daily: 'Harian', weekly: 'Mingguan', monthly: 'Bulanan' };
+
+  const exportData = chartData.map(u => ({
+    Unit: u.name,
+    Penjualan: formatRupiah(u.penjualan),
+    Laba: formatRupiah(u.laba),
+    Pengeluaran: formatRupiah(u.pengeluaran),
+    'Laba Bersih': formatRupiah(u.laba - u.pengeluaran)
+  }));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -72,9 +81,12 @@ export default function AdminReports() {
       </div>
 
       <div className="bg-card rounded-xl p-6 shadow-card">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-foreground">Laporan Per Unit ({periodLabels[period]})</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            <h3 className="font-bold text-foreground">Laporan Per Unit ({periodLabels[period]})</h3>
+          </div>
+          <ExportButtons data={exportData} filename={`laporan-${periodLabels[period].toLowerCase()}`} title={`Laporan ${periodLabels[period]}`} />
         </div>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
@@ -90,31 +102,6 @@ export default function AdminReports() {
             </BarChart>
           </ResponsiveContainer>
         ) : <p className="text-muted-foreground text-center py-8">Belum ada data</p>}
-      </div>
-
-      <div className="bg-card rounded-xl p-6 shadow-card">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-foreground">Cash Flow</h3>
-        </div>
-        <div className="space-y-3">
-          <div className="flex justify-between py-2 border-b border-border">
-            <span className="text-sm text-muted-foreground">Pemasukan (Penjualan)</span>
-            <span className="text-sm font-bold text-success">{formatRupiah(totalSales)}</span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-border">
-            <span className="text-sm text-muted-foreground">HPP (Harga Pokok)</span>
-            <span className="text-sm font-bold text-destructive">- {formatRupiah(totalHPP)}</span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-border">
-            <span className="text-sm text-muted-foreground">Pengeluaran Operasional</span>
-            <span className="text-sm font-bold text-destructive">- {formatRupiah(totalExpenses)}</span>
-          </div>
-          <div className="flex justify-between py-3 bg-muted/50 rounded-lg px-3">
-            <span className="text-sm font-bold text-foreground">Arus Kas Bersih</span>
-            <span className={`text-sm font-bold ${netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>{formatRupiah(netProfit)}</span>
-          </div>
-        </div>
       </div>
     </div>
   );

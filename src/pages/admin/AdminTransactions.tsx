@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { formatRupiah, formatDateTime } from '@/lib/format';
 import { Receipt } from 'lucide-react';
+import ExportButtons from '@/components/ExportButtons';
 
 export default function AdminTransactions() {
   const { transactions, units } = useApp();
@@ -9,6 +10,18 @@ export default function AdminTransactions() {
 
   const filtered = selectedUnit === 'all' ? transactions : transactions.filter(t => t.unitId === selectedUnit);
   const sorted = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const exportData = sorted.map(t => ({
+    'ID Transaksi': t.id,
+    'Tanggal': formatDateTime(t.date),
+    Unit: units.find(u => u.id === t.unitId)?.name || '-',
+    'Nama Kasir': t.cashierName,
+    'Jumlah Item': t.items.length,
+    'Total': formatRupiah(t.total),
+    'Diskon': formatRupiah(t.discount),
+    'Grand Total': formatRupiah(t.grandTotal),
+    'Tipe Pembayaran': t.paymentType === 'cash' ? 'Tunai' : t.paymentType === 'transfer' ? 'Transfer' : 'Kredit'
+  }));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -29,7 +42,10 @@ export default function AdminTransactions() {
         <div className="flex items-center gap-2 p-6 border-b border-border">
           <Receipt className="w-5 h-5 text-primary" />
           <h3 className="font-bold text-foreground">Riwayat Transaksi</h3>
-          <span className="ml-auto text-sm text-muted-foreground">{sorted.length} transaksi</span>
+          <div className="ml-auto flex items-center gap-2">
+            <ExportButtons data={exportData} filename="transaksi" title="Riwayat Transaksi" />
+            <span className="text-sm text-muted-foreground">{sorted.length} transaksi</span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">

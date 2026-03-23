@@ -3,6 +3,7 @@ import { useApp, Product } from '@/contexts/AppContext';
 import { formatRupiah, formatDate } from '@/lib/format';
 import { Plus, X, Edit2, Package, AlertTriangle, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import ExportButtons from '@/components/ExportButtons';
 
 export default function AdminProducts() {
   const { units, products, users, addUnit, deleteUnit, addProduct, updateProduct, deleteProduct, getProductStock } = useApp();
@@ -48,6 +49,19 @@ export default function AdminProducts() {
     setForm({ supplier: p.supplier, name: p.name, unitId: p.unitId, satuan: p.satuan, hpp: p.hpp, price: p.price, initialStock: p.initialStock, addedStock: p.addedStock });
     setShowAddProduct(true);
   };
+
+  const exportData = filteredProducts.map(p => ({
+    Supplier: p.supplier,
+    'Nama Produk': p.name,
+    Unit: units.find(u => u.id === p.unitId)?.name || '-',
+    Satuan: p.satuan,
+    HPP: formatRupiah(p.hpp),
+    Harga: formatRupiah(p.price),
+    'Stok Awal': p.initialStock,
+    'Stok Tambah': p.addedStock,
+    'Stok Terjual': p.soldStock,
+    'Stok Tersedia': getProductStock(p)
+  }));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -123,10 +137,13 @@ export default function AdminProducts() {
       <div className="bg-card rounded-xl shadow-card overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 className="font-bold text-foreground">Manajemen Produk</h3>
-          <button onClick={() => { setEditProduct(null); setForm({ supplier: '', name: '', unitId: selectedUnit !== 'all' ? selectedUnit : '', satuan: 'pcs', hpp: 0, price: 0, initialStock: 0, addedStock: 0 }); setShowAddProduct(true); }}
-            className="flex items-center gap-2 px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90">
-            <Plus className="w-4 h-4" /> Tambah Produk
-          </button>
+          <div className="flex items-center gap-2">
+            <ExportButtons data={exportData} filename="produk" title="Daftar Produk" />
+            <button onClick={() => { setEditProduct(null); setForm({ supplier: '', name: '', unitId: selectedUnit !== 'all' ? selectedUnit : '', satuan: 'pcs', hpp: 0, price: 0, initialStock: 0, addedStock: 0 }); setShowAddProduct(true); }}
+              className="flex items-center gap-2 px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90">
+              <Plus className="w-4 h-4" /> Tambah Produk
+            </button>
+          </div>
         </div>
 
         {showAddProduct && (

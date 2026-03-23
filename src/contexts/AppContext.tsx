@@ -209,6 +209,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(p => ({ ...p, users: p.users.filter(u => u.id !== id) }));
   }, []);
 
+  const updateUser = useCallback((user: User) => {
+    setState(p => ({ ...p, users: p.users.map(u => u.id === user.id ? user : u) }));
+  }, []);
+
   const addUnit = useCallback((unit: Omit<Unit, 'id'>) => {
     setState(p => ({ ...p, units: [...p.units, { ...unit, id: genId() }] }));
   }, []);
@@ -353,7 +357,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      ...state, login, logout, completeSetup, addUser, deleteUser,
+      ...state, login, logout, completeSetup, addUser, deleteUser, updateUser,
       addUnit, deleteUnit, updateUnit, addProduct, updateProduct, deleteProduct,
       addToCart, removeFromCart, clearCart, updateCartQty,
       submitTransaction, addDebt, payDebt, addExpense,
