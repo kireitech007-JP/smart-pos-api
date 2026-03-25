@@ -52,17 +52,51 @@ const CONFIG = {
  */
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
+    // Log raw request untuk debugging
+    logBackup('RAW_REQUEST', {
+      postData: e.postData,
+      contents: e.postData.contents,
+      contentType: e.postData.type
+    }, 'REQUEST', 'Raw request received');
+    
+    let data;
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (parseError) {
+      throw new Error(`Invalid JSON format: ${parseError.message}. Content: ${e.postData.contents}`);
+    }
+    
     const action = data.action;
     
-    // Log semua request
-    logBackup(action, data, 'REQUEST', `Received ${action} request`);
+    // Log parsed data untuk debugging
+    logBackup('PARSED_DATA', {
+      action: action,
+      dataType: typeof data,
+      hasDataProperty: data.hasOwnProperty('data'),
+      dataPropertyType: typeof data.data,
+      dataKeys: Object.keys(data)
+    }, 'REQUEST', `Parsed ${action} request`);
     
     let result;
     
     switch (action) {
       case 'backupAllData':
-        result = backupAllData(data.data);
+        // Handle berbagai kemungkinan struktur data
+        let backupData = data.data || data;
+        if (!backupData) {
+          // Coba apakah data langsung dikirim tanpa wrapper
+          backupData = data;
+        }
+        
+        logBackup('BACKUP_DATA_CHECK', {
+          backupDataType: typeof backupData,
+          backupDataKeys: typeof backupData === 'object' && backupData !== null ? Object.keys(backupData) : 'N/A',
+          isNull: backupData === null,
+          isUndefined: backupData === undefined,
+          isArray: Array.isArray(backupData)
+        }, 'REQUEST', 'Checking backup data structure');
+        
+        result = backupAllData(backupData);
         break;
       case 'restoreAllData':
         result = restoreAllData();
@@ -112,6 +146,14 @@ function doPost(e) {
       case 'getProduk':
         result = getProduk();
         break;
+      case 'debugRequest':
+        result = {
+          receivedData: data,
+          dataType: typeof data,
+          dataKeys: Object.keys(data),
+          rawContent: e.postData.contents
+        };
+        break;
       default:
         throw new Error(`Unknown action: ${action}`);
     }
@@ -125,12 +167,17 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
-    logBackup('ERROR', e.postData.contents, 'ERROR', error.message);
+    logBackup('ERROR', e.postData ? e.postData.contents : 'No post data', 'ERROR', error.message);
     
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.message,
-      message: 'Request failed'
+      message: 'Request failed',
+      debug: {
+        hasPostData: !!e.postData,
+        postDataType: typeof e.postData,
+        postDataContents: e.postData ? e.postData.contents : 'No contents'
+      }
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -142,96 +189,145 @@ function backupAllData(allData) {
   const results = {};
   
   try {
+    // Log input data untuk debugging
+    logBackup('BACKUP_INPUT', {
+      inputType: typeof allData,
+      inputIsNull: allData === null,
+      inputIsUndefined: allData === undefined,
+      inputIsArray: Array.isArray(allData),
+      inputKeys: typeof allData === 'object' && allData !== null ? Object.keys(allData) : 'N/A',
+      inputString: JSON.stringify(allData)
+    }, 'REQUEST', 'Analyzing backup input data');
+    
     // Cek apakah allData ada dan adalah object
-    if (!allData || typeof allData !== 'object') {
-      throw new Error('Invalid data format: allData must be an object');
+    if (!allData || typeof allData !== 'object' || Array.isArray(allData)) {
+      // Jika bukan object yang valid, coba beberapa fallback
+      if (allData === null || allData === undefined) {
+        // Buat object kosong jika null/undefined
+        allData = {};
+        logBackup('FALLBACK', 'Created empty object for null/undefined input', 'REQUEST', 'Fallback applied');
+      } else if (Array.isArray(allData)) {
+        // Jika array, mungkin data langsung dikirim sebagai array
+        // Asumsikan ini array dari semua data gabungan
+        allData = {
+          transaksi: allData,
+          kategori: [],
+          satuan: [],
+          produk: [],
+          pengguna: [],
+          unit: [],
+          transaksiItems: [],
+          piutang: [],
+          kasMasuk: [],
+          pengeluaran: [],
+          laporan: [],
+          sessions: []
+        };
+        logBackup('FALLBACK', 'Converted array to object with transaksi data', 'REQUEST', 'Array fallback applied');
+      } else {
+        throw new Error(`Invalid data format: expected object, got ${typeof allData}. Data: ${JSON.stringify(allData)}`);
+      }
     }
     
     // Backup semua tabel dengan validasi
     if (allData.kategori && Array.isArray(allData.kategori)) {
       results.kategori = backupKategori(allData.kategori);
     } else {
-      results.kategori = { count: 0, message: 'Kategori data not found or invalid' };
+      results.kategori = { count: 0, message: 'Kategori data not found or invalid', dataType: typeof allData.kategori };
     }
     
     if (allData.satuan && Array.isArray(allData.satuan)) {
       results.satuan = backupSatuan(allData.satuan);
     } else {
-      results.satuan = { count: 0, message: 'Satuan data not found or invalid' };
+      results.satuan = { count: 0, message: 'Satuan data not found or invalid', dataType: typeof allData.satuan };
     }
     
     if (allData.produk && Array.isArray(allData.produk)) {
       results.produk = backupProduk(allData.produk);
     } else {
-      results.produk = { count: 0, message: 'Produk data not found or invalid' };
+      results.produk = { count: 0, message: 'Produk data not found or invalid', dataType: typeof allData.produk };
     }
     
     if (allData.pengguna && Array.isArray(allData.pengguna)) {
       results.pengguna = backupPengguna(allData.pengguna);
     } else {
-      results.pengguna = { count: 0, message: 'Pengguna data not found or invalid' };
+      results.pengguna = { count: 0, message: 'Pengguna data not found or invalid', dataType: typeof allData.pengguna };
     }
     
     if (allData.unit && Array.isArray(allData.unit)) {
       results.unit = backupUnit(allData.unit);
     } else {
-      results.unit = { count: 0, message: 'Unit data not found or invalid' };
+      results.unit = { count: 0, message: 'Unit data not found or invalid', dataType: typeof allData.unit };
     }
     
     if (allData.transaksi && Array.isArray(allData.transaksi)) {
       results.transaksi = backupTransaksi(allData.transaksi);
     } else {
-      results.transaksi = { count: 0, message: 'Transaksi data not found or invalid' };
+      results.transaksi = { count: 0, message: 'Transaksi data not found or invalid', dataType: typeof allData.transaksi };
     }
     
     if (allData.transaksiItems && Array.isArray(allData.transaksiItems)) {
       results.transaksiItems = backupTransaksiItems(allData.transaksiItems);
     } else {
-      results.transaksiItems = { count: 0, message: 'Transaksi items data not found or invalid' };
+      results.transaksiItems = { count: 0, message: 'Transaksi items data not found or invalid', dataType: typeof allData.transaksiItems };
     }
     
     if (allData.piutang && Array.isArray(allData.piutang)) {
       results.piutang = backupPiutang(allData.piutang);
     } else {
-      results.piutang = { count: 0, message: 'Piutang data not found or invalid' };
+      results.piutang = { count: 0, message: 'Piutang data not found or invalid', dataType: typeof allData.piutang };
     }
     
     if (allData.kasMasuk && Array.isArray(allData.kasMasuk)) {
       results.kasMasuk = backupKasMasuk(allData.kasMasuk);
     } else {
-      results.kasMasuk = { count: 0, message: 'Kas masuk data not found or invalid' };
+      results.kasMasuk = { count: 0, message: 'Kas masuk data not found or invalid', dataType: typeof allData.kasMasuk };
     }
     
     if (allData.pengeluaran && Array.isArray(allData.pengeluaran)) {
       results.pengeluaran = backupPengeluaran(allData.pengeluaran);
     } else {
-      results.pengeluaran = { count: 0, message: 'Pengeluaran data not found or invalid' };
+      results.pengeluaran = { count: 0, message: 'Pengeluaran data not found or invalid', dataType: typeof allData.pengeluaran };
     }
     
     if (allData.laporan && Array.isArray(allData.laporan)) {
       results.laporan = backupLaporan(allData.laporan);
     } else {
-      results.laporan = { count: 0, message: 'Laporan data not found or invalid' };
+      results.laporan = { count: 0, message: 'Laporan data not found or invalid', dataType: typeof allData.laporan };
     }
     
     if (allData.sessions && Array.isArray(allData.sessions)) {
       results.sessions = backupSessions(allData.sessions);
     } else {
-      results.sessions = { count: 0, message: 'Sessions data not found or invalid' };
+      results.sessions = { count: 0, message: 'Sessions data not found or invalid', dataType: typeof allData.sessions };
     }
+    
+    const summary = {
+      totalTables: Object.keys(results).length,
+      totalRecords: Object.values(results).reduce((sum, result) => sum + (result.count || 0), 0),
+      successfulTables: Object.values(results).filter(result => result.count > 0).length
+    };
     
     return {
       success: true,
       results: results,
       message: 'All data backed up successfully',
       timestamp: new Date().toISOString(),
-      summary: {
-        totalTables: Object.keys(results).length,
-        totalRecords: Object.values(results).reduce((sum, result) => sum + (result.count || 0), 0)
+      summary: summary,
+      inputAnalysis: {
+        originalType: typeof allData,
+        processedKeys: Object.keys(allData),
+        totalOriginalKeys: Object.keys(allData).length
       }
     };
     
   } catch (error) {
+    logBackup('BACKUP_ERROR', {
+      error: error.message,
+      allDataType: typeof allData,
+      allDataString: JSON.stringify(allData)
+    }, 'ERROR', 'Backup failed');
+    
     throw new Error(`Backup failed: ${error.message}`);
   }
 }
