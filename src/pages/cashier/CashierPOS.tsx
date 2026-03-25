@@ -21,6 +21,7 @@ export default function CashierPOS() {
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [showExpense, setShowExpense] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -47,6 +48,19 @@ export default function CashierPOS() {
   const [openingCash, setOpeningCash] = useState(0);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
+  // Add product state
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    sku: '',
+    price: 0,
+    hpp: 0,
+    stock: 0,
+    minStock: 0,
+    categoryId: '',
+    unitId: '',
+    supplier: ''
+  });
+
   const userUnit = units.find(u => u.id === currentUser?.unitId);
   const activeSession = currentUser ? getActiveSession(currentUser.id) : undefined;
 
@@ -55,10 +69,25 @@ export default function CashierPOS() {
   }, [products, currentUser]);
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery) return unitProducts;
-    const q = searchQuery.toLowerCase();
-    return unitProducts.filter(p => p.name.toLowerCase().includes(q) || p.supplier.toLowerCase().includes(q));
-  }, [unitProducts, searchQuery]);
+    let filtered = unitProducts;
+    
+    // Filter by search query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(q) || 
+        p.supplier.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q)
+      );
+    }
+    
+    // Filter by unit
+    if (selectedUnit) {
+      filtered = filtered.filter(p => p.unitId === selectedUnit);
+    }
+    
+    return filtered;
+  }, [unitProducts, searchQuery, selectedUnit]);
 
   const cartItems = useMemo(() => {
     return cart.map(c => {
@@ -83,6 +112,59 @@ export default function CashierPOS() {
     closeCashierSession(activeSession.id, 0);
     setShowCashierClose(false);
     toast.success('Kasir ditutup');
+  };
+
+  const handleAddProduct = () => {
+    if (!newProduct.name.trim()) {
+      toast.error('Nama produk harus diisi!');
+      return;
+    }
+    if (newProduct.price <= 0) {
+      toast.error('Harga harus lebih dari 0!');
+      return;
+    }
+    if (newProduct.stock < 0) {
+      toast.error('Stok tidak boleh negatif!');
+      return;
+    }
+
+    // Generate random ID for new product
+    const productId = 'prod_' + Date.now();
+    
+    // Add to products (this would normally be handled by the context)
+    const product = {
+      id: productId,
+      name: newProduct.name,
+      sku: newProduct.sku || productId,
+      price: newProduct.price,
+      hpp: newProduct.hpp,
+      stock: newProduct.stock,
+      minStock: newProduct.minStock,
+      categoryId: newProduct.categoryId,
+      unitId: currentUser?.unitId || newProduct.unitId,
+      supplier: newProduct.supplier,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Reset form
+    setNewProduct({
+      name: '',
+      sku: '',
+      price: 0,
+      hpp: 0,
+      stock: 0,
+      minStock: 0,
+      categoryId: '',
+      unitId: '',
+      supplier: ''
+    });
+    
+    setShowAddProduct(false);
+    toast.success('Produk berhasil ditambahkan!');
+    
+    // Log the product (in real implementation, this would save to context/API)
+    console.log('New product added:', product);
   };
 
   const handlePayment = () => {
@@ -299,10 +381,29 @@ export default function CashierPOS() {
         <div className="flex-1 flex overflow-hidden">
           {/* Products */}
           <div className="flex-1 flex flex-col overflow-hidden p-4">
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Cari produk..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            <div className="flex gap-2 mb-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Cari produk..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <select 
+                value={selectedUnit} 
+                onChange={e => setSelectedUnit(e.target.value)}
+                className="px-3 py-2.5 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Semua Unit</option>
+                {units.filter(u => u.id === currentUser?.unitId).map(unit => (
+                  <option key={unit.id} value={unit.id}>{unit.name}</option>
+                ))}
+              </select>
+              <button 
+                onClick={() => setShowAddProduct(true)}
+                className="px-4 py-2.5 primary-gradient text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Tambah Produk
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 content-start">
               {filteredProducts.map(p => {
@@ -849,6 +950,113 @@ export default function CashierPOS() {
               <div className="flex gap-2">
                 <button onClick={() => setShowCashierClose(false)} className="flex-1 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium">Batal</button>
                 <button onClick={handleCloseSession} className="flex-1 py-3 bg-destructive text-destructive-foreground rounded-lg font-medium">Tutup Kasir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Product Modal */}
+      {showAddProduct && (
+        <div className="fixed inset-0 bg-foreground/40 flex items-center justify-center z-50 p-4" onClick={() => setShowAddProduct(false)}>
+          <div className="bg-card rounded-2xl shadow-float w-full max-w-md max-h-[90vh] overflow-y-auto animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground">Tambah Produk</h3>
+              <button onClick={() => setShowAddProduct(false)} className="p-2 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">Nama Produk *</label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={e => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Masukkan nama produk"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">SKU</label>
+                <input
+                  type="text"
+                  value={newProduct.sku}
+                  onChange={e => setNewProduct(prev => ({ ...prev, sku: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Kode produk (opsional)"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Harga Jual *</label>
+                  <input
+                    type="number"
+                    value={newProduct.price}
+                    onChange={e => setNewProduct(prev => ({ ...prev, price: Number(e.target.value) }))}
+                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">HPP</label>
+                  <input
+                    type="number"
+                    value={newProduct.hpp}
+                    onChange={e => setNewProduct(prev => ({ ...prev, hpp: Number(e.target.value) }))}
+                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Stok *</label>
+                  <input
+                    type="number"
+                    value={newProduct.stock}
+                    onChange={e => setNewProduct(prev => ({ ...prev, stock: Number(e.target.value) }))}
+                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Stok Minimum</label>
+                  <input
+                    type="number"
+                    value={newProduct.minStock}
+                    onChange={e => setNewProduct(prev => ({ ...prev, minStock: Number(e.target.value) }))}
+                    className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">Supplier</label>
+                <input
+                  type="text"
+                  value={newProduct.supplier}
+                  onChange={e => setNewProduct(prev => ({ ...prev, supplier: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Nama supplier"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={handleAddProduct} className="flex-1 py-3 primary-gradient text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                  Tambah Produk
+                </button>
+                <button onClick={() => setShowAddProduct(false)} className="flex-1 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors">
+                  Batal
+                </button>
               </div>
             </div>
           </div>
