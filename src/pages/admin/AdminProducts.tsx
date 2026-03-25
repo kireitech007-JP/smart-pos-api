@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { useApp, Product } from '@/contexts/AppContext';
+import { useApp, Product, Unit } from '@/contexts/AppContext';
 import { formatRupiah, formatDate } from '@/lib/format';
 import { Plus, X, Edit2, Package, AlertTriangle, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import ExportButtons from '@/components/ExportButtons';
 
 export default function AdminProducts() {
-  const { units, products, users, addUnit, deleteUnit, addProduct, updateProduct, deleteProduct, getProductStock } = useApp();
+  const { units, products, users, addUnit, deleteUnit, updateUnit, addProduct, updateProduct, deleteProduct, getProductStock } = useApp();
   const [selectedUnit, setSelectedUnit] = useState<string>('all');
   const [showAddUnit, setShowAddUnit] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [editUnit, setEditUnit] = useState<Unit | null>(null);
   const [unitName, setUnitName] = useState('');
   const [unitCashier, setUnitCashier] = useState('');
 
@@ -27,6 +28,23 @@ export default function AdminProducts() {
     setUnitCashier('');
     setShowAddUnit(false);
     toast.success('Unit berhasil ditambahkan');
+  };
+
+  const handleEditUnit = (unit: Unit) => {
+    setEditUnit(unit);
+    setUnitName(unit.name);
+    setUnitCashier(unit.cashierId || '');
+    setShowAddUnit(true);
+  };
+
+  const handleUpdateUnit = () => {
+    if (!unitName.trim() || !editUnit) return;
+    updateUnit({ ...editUnit, name: unitName, cashierId: unitCashier || undefined });
+    setUnitName('');
+    setUnitCashier('');
+    setShowAddUnit(false);
+    setEditUnit(null);
+    toast.success('Unit berhasil diupdate');
   };
 
   const handleSubmitProduct = () => {
@@ -69,13 +87,19 @@ export default function AdminProducts() {
       <div className="bg-card rounded-xl p-6 shadow-card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-foreground">Unit / Cabang</h3>
-          <button onClick={() => setShowAddUnit(true)} className="flex items-center gap-2 px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90">
+          <button onClick={() => { 
+            setEditUnit(null); 
+            setUnitName(''); 
+            setUnitCashier(''); 
+            setShowAddUnit(true); 
+          }} className="flex items-center gap-2 px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90">
             <Plus className="w-4 h-4" /> Tambah Unit
           </button>
         </div>
 
         {showAddUnit && (
           <div className="mb-4 p-4 bg-muted rounded-lg flex flex-wrap gap-3 items-end animate-scale-in">
+            <h4 className="w-full font-semibold text-foreground mb-2">{editUnit ? 'Edit Unit' : 'Tambah Unit Baru'}</h4>
             <div className="flex-1 min-w-[200px]">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Nama Unit</label>
               <input value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Contoh: Unit A"
@@ -90,8 +114,15 @@ export default function AdminProducts() {
               </select>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleAddUnit} className="px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium">Simpan</button>
-              <button onClick={() => setShowAddUnit(false)} className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium">Batal</button>
+              <button onClick={editUnit ? handleUpdateUnit : handleAddUnit} className="px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium">
+                {editUnit ? 'Update' : 'Simpan'}
+              </button>
+              <button onClick={() => { 
+                setShowAddUnit(false); 
+                setEditUnit(null); 
+                setUnitName(''); 
+                setUnitCashier(''); 
+              }} className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium">Batal</button>
             </div>
           </div>
         )}
@@ -112,6 +143,10 @@ export default function AdminProducts() {
                 <button onClick={(e) => { e.stopPropagation(); deleteUnit(unit.id); }} 
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
                   <X className="w-3 h-3" />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); handleEditUnit(unit); }} 
+                  className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+                  <Edit2 className="w-3 h-3" />
                 </button>
                 <Package className="w-6 h-6 mx-auto mb-2 text-primary" />
                 <p className="text-sm font-bold text-foreground">{unit.name}</p>
