@@ -155,9 +155,9 @@ export default function CloudSettings() {
               supabaseConfig.isConnected ? 'bg-green-100' : 'bg-gray-100'
             }`}>
               {supabaseConfig.isConnected ? (
-                <Database className="w-5 h-5 text-green-600" />
+              <Database className="w-5 h-5 text-green-600" />
               ) : (
-                <Database className="w-5 h-5 text-gray-600" />
+              <Database className="w-5 h-5 text-gray-600" />
               )}
             </div>
             <div>

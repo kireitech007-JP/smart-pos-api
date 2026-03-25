@@ -11,7 +11,6 @@ import CashIn from '@/components/CashIn';
 import CashierDashboard from '@/components/CashierDashboard';
 import ExportButtons from '@/components/ExportButtons';
 import PrintButtons from '@/components/PrintButtons';
-import CloudSettings from '@/components/CloudSettings';
 
 export default function CashierPOS() {
   const { 
@@ -29,7 +28,7 @@ export default function CashierPOS() {
   const [showInvoice, setShowInvoice] = useState<Transaction | null>(null);
   const [showCashierOpen, setShowCashierOpen] = useState(false);
   const [showCashierClose, setShowCashierClose] = useState(false);
-  const [activePage, setActivePage] = useState<'dashboard' | 'cashin' | 'pos' | 'expense' | 'debt' | 'cloud'>('dashboard');
+  const [activePage, setActivePage] = useState<'dashboard' | 'cashin' | 'pos' | 'expense' | 'debt'>('dashboard');
 
   // Payment state
   const [paymentType, setPaymentType] = useState<'cash' | 'transfer' | 'credit'>('cash');
@@ -265,7 +264,7 @@ export default function CashierPOS() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {['dashboard', 'cashin', 'pos', 'expense', 'debt', 'cloud'].map(page => {
+          {['dashboard', 'cashin', 'pos', 'expense', 'debt'].map(page => {
             console.log('Rendering menu item:', page, 'activePage:', activePage);
             return (
               <button key={page} onClick={() => {
@@ -273,7 +272,7 @@ export default function CashierPOS() {
                 setActivePage(page as any);
               }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${activePage === page ? 'primary-gradient text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
-                {page === 'dashboard' ? 'Dashboard' : page === 'cashin' ? 'Kas Masuk' : page === 'pos' ? 'Kasir' : page === 'expense' ? 'Pengeluaran' : page === 'debt' ? 'Piutang' : 'Cloud'}
+                {page === 'dashboard' ? 'Dashboard' : page === 'cashin' ? 'Kas Masuk' : page === 'pos' ? 'Kasir' : page === 'expense' ? 'Pengeluaran' : 'Piutang'}
               </button>
             );
           })}
@@ -465,13 +464,6 @@ export default function CashierPOS() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {activePage === 'cloud' && (
-        <div className="flex-1 p-6 overflow-y-auto">
-          {console.log('Rendering CloudSettings component, activePage:', activePage)}
-          <CloudSettings />
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import CloudSettings from '@/components/CloudSettings';
 
 export default function SettingsPage() {
   console.log('Settings component mounted');
@@ -52,6 +53,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Cloud Settings */}
+      <CloudSettings />
+
       {/* Test Section */}
       <div className="bg-card rounded-xl shadow-card overflow-hidden p-6">
         <h3 className="font-bold text-foreground mb-4">Status Pengaturan</h3>
@@ -64,6 +68,9 @@ export default function SettingsPage() {
           </p>
           <p className="text-sm text-muted-foreground">
             ✅ Data toko dapat diedit
+          </p>
+          <p className="text-sm text-muted-foreground">
+            ✅ Pengaturan cloud tersedia
           </p>
         </div>
       </div>
