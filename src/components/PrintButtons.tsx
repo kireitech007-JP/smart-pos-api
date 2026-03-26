@@ -209,7 +209,7 @@ export default function PrintButtons({
             </div>
             <div class="info-row">
               <span>Kasir</span>
-              <span>${tx.cashierName}</span>
+              <span>${tx.cashierName || sessionData?.cashierName || 'System'}</span>
             </div>
             <div class="info-row">
               <span>Pelanggan</span>
@@ -365,6 +365,12 @@ export default function PrintButtons({
               color: #666;
               margin: 2px 0;
             }
+            .tx-details { 
+              font-size: ${isDotMatrix ? '8px' : '7px'};
+              color: #888;
+              font-style: italic;
+              margin: 2px 0;
+            }
             .summary { 
               margin-top: 15px;
               border-top: 2px solid #000;
@@ -436,6 +442,9 @@ export default function PrintButtons({
                 </div>
                 <div class="tx-items">
                   ${tx.items.map(item => `${item.productName} x${item.qty}`).join(', ')}
+                </div>
+                <div class="tx-details">
+                  Kasir: ${tx.cashierName || 'System'} | ${formatDateTime(tx.date)}
                 </div>
               </div>
             `).join('')}
@@ -623,7 +632,7 @@ export default function PrintButtons({
           <div class="section">
             <div class="summary-row">
               <span>Kasir:</span>
-              <span>${sessionData?.cashirName || '-'}</span>
+              <span>${sessionData?.cashierName || '-'}</span>
             </div>
             ${!isCompact ? `
             <div class="summary-row">
