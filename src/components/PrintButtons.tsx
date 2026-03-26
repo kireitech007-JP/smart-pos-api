@@ -153,7 +153,7 @@ export default function PrintButtons({
               justify-content: space-between;
               margin-bottom: 8px;
               padding-bottom: 5px;
-              border-bottom: 1px solid #ddd;
+              border-bottom: 1px dashed #000;
               font-weight: bold;
               font-size: ${isDotMatrix ? '10px' : '9px'};
             }
@@ -196,7 +196,9 @@ export default function PrintButtons({
             .total { 
               margin-top: 15px;
               border-top: 1px solid #000;
+              border-bottom: 2px solid #000;
               padding-top: 10px;
+              padding-bottom: 10px;
             }
             .total-row { 
               display: flex; 
@@ -413,7 +415,7 @@ export default function PrintButtons({
               justify-content: space-between;
               margin-bottom: 8px;
               padding-bottom: 5px;
-              border-bottom: 1px solid #ddd;
+              border-bottom: 1px dashed #000;
               font-weight: bold;
               font-size: ${isDotMatrix ? '10px' : '9px'};
             }
@@ -456,7 +458,9 @@ export default function PrintButtons({
             .total { 
               margin-top: 15px;
               border-top: 1px solid #000;
+              border-bottom: 2px solid #000;
               padding-top: 10px;
+              padding-bottom: 10px;
             }
             .total-row { 
               display: flex; 
