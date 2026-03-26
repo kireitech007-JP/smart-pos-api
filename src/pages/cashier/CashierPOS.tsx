@@ -1087,13 +1087,7 @@ export default function CashierPOS() {
                         <p className="font-bold text-accent">Sisa: {formatRupiah(d.remainingAmount)}</p>
                       </div>
                     </div>
-                    <button onClick={() => {
-                      const amount = prompt('Masukkan jumlah pembayaran:');
-                      if (amount && Number(amount) > 0) {
-                        payDebt(d.id, Number(amount));
-                        toast.success('Pembayaran berhasil');
-                      }
-                    }} className="mt-2 px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium">
+                    <button onClick={() => handlePayDebt(d)} className="mt-2 px-4 py-2 primary-gradient text-primary-foreground rounded-lg text-sm font-medium">
                       Bayar Piutang
                     </button>
                   </div>
@@ -1774,6 +1768,151 @@ export default function CashierPOS() {
                 </button>
                 <button onClick={() => setShowEditStock(false)} className="flex-1 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors">
                   Batal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Debt Payment Modal */}
+      {showDebtPayment && selectedDebt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-elevated w-full max-w-md animate-scale-in">
+            <div className="p-6 border-b border-border">
+              <h3 className="text-lg font-bold text-foreground">Pembayaran Piutang</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3">
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <p className="text-sm text-muted-foreground">Pelanggan:</p>
+                  <p className="text-sm font-medium text-foreground">{selectedDebt.customerName}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <p className="text-sm text-muted-foreground">Total Piutang:</p>
+                  <p className="text-sm font-medium text-foreground">{formatRupiah(selectedDebt.totalAmount)}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <p className="text-sm text-muted-foreground">Sisa Piutang:</p>
+                  <p className="text-sm font-bold text-accent">{formatRupiah(selectedDebt.remainingAmount)}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">Jumlah Pembayaran *</label>
+                <input
+                  type="number"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                  placeholder="0"
+                  min={0}
+                  max={selectedDebt.remainingAmount}
+                  className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">Catatan</label>
+                <textarea
+                  value={paymentNotes}
+                  onChange={(e) => setPaymentNotes(e.target.value)}
+                  placeholder="Catatan pembayaran (opsional)"
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDebtPayment(false)}
+                  className="flex-1 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleProcessDebtPayment}
+                  className="flex-1 py-3 primary-gradient text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Proses Pembayaran
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Debt Invoice Modal */}
+      {showDebtInvoice && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-elevated w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+            <div className="p-6 border-b border-border">
+              <h3 className="text-lg font-bold text-foreground">Invoice Pembayaran Piutang</h3>
+            </div>
+            <div className="p-6">
+              {/* Invoice content will be handled by PrintButtons */}
+              <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">No. Invoice:</p>
+                    <p className="font-bold text-foreground">DEBT-{Date.now().toString().slice(-6).toUpperCase()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Tanggal:</p>
+                    <p className="font-bold text-foreground">{formatDateTime(new Date().toISOString())}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <p className="text-sm text-muted-foreground">Pelanggan:</p>
+                    <p className="text-sm font-medium text-foreground">{selectedDebt?.customerName}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <p className="text-sm text-muted-foreground">Jumlah Bayar:</p>
+                    <p className="text-sm font-bold text-success">{formatRupiah(paymentAmount)}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <p className="text-sm text-muted-foreground">Sisa Piutang:</p>
+                    <p className="text-sm font-bold text-accent">{formatRupiah((selectedDebt?.remainingAmount || 0) - paymentAmount)}</p>
+                  </div>
+                  {paymentNotes && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Catatan:</p>
+                      <p className="text-sm text-foreground">{paymentNotes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mb-4">
+                <PrintButtons 
+                  transaction={{
+                    id: 'DEBT_' + Date.now(),
+                    date: new Date().toISOString(),
+                    customerName: selectedDebt?.customerName,
+                    customerPhone: selectedDebt?.customerPhone,
+                    grandTotal: paymentAmount,
+                    paymentType: 'cash',
+                    items: [],
+                    cashierName: currentUser?.name,
+                    type: 'debt_payment'
+                  }}
+                  type="invoice"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDebtInvoice(false)}
+                  className="flex-1 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                >
+                  Tutup
+                </button>
+                <button
+                  onClick={handleWhatsAppDebtInvoice}
+                  className="flex-1 py-3 bg-success text-success-foreground rounded-lg font-medium hover:bg-success/90 transition-colors"
+                >
+                  Kirim WhatsApp
                 </button>
               </div>
             </div>
