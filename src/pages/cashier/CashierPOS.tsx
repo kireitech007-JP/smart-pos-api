@@ -1202,7 +1202,7 @@ export default function CashierPOS() {
                   <option value="">-- Pilih Produk --</option>
                   {unitProducts.map(product => (
                     <option key={product.id} value={product.id}>
-                      {product.name} (Stok: {product.stock})
+                      {product.name} - Stok: {product.stock} {product.satuan || 'pcs'}
                     </option>
                   ))}
                 </select>
