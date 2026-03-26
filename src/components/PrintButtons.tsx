@@ -83,6 +83,12 @@ export default function PrintButtons({
   ];
 
   const generateInvoiceHTML = (tx: Transaction) => {
+    // Debug logging
+    console.log('generateInvoiceHTML - tx:', tx);
+    console.log('generateInvoiceHTML - tx.items:', tx.items);
+    console.log('generateInvoiceHTML - tx.cashierName:', tx.cashierName);
+    console.log('generateInvoiceHTML - tx.customerName:', tx.customerName);
+    
     const isThermal = selectedPrinter.type === 'thermal';
     const isBluetooth = selectedPrinter.type === 'bluetooth';
     const isDotMatrix = selectedPrinter.type === 'dotmatrix';
@@ -141,6 +147,12 @@ export default function PrintButtons({
               border-top: 2px solid #000;
               border-bottom: 2px solid #000;
               background: #fff;
+            }
+            .no-items {
+              text-align: center;
+              color: #666;
+              font-style: italic;
+              padding: 20px;
             }
             .item-row { 
               display: flex; 
@@ -223,13 +235,13 @@ export default function PrintButtons({
           </div>
           
           <div class="items">
-            ${tx.items.map(item => `
+            ${tx.items && tx.items.length > 0 ? tx.items.map(item => `
               <div class="item-row">
                 <div class="item-name">${item.productName}</div>
                 <div class="item-qty">${item.qty}</div>
                 <div class="item-price">${formatRupiah(item.price)}</div>
               </div>
-            `).join('')}
+            `).join('') : '<div class="no-items">Tidak ada item</div>'}
           </div>
           
           <div class="total">
