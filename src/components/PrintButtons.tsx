@@ -330,6 +330,17 @@ export default function PrintButtons({
             <div>Selamat Berbelanja Kembali</div>
             ${isDotMatrix ? '<div>***</div>' : ''}
           </div>
+          
+          <div class="signature">
+            <div class="sig-box">
+              <div>Pelanggan</div>
+              <div style="margin-top: 20px; font-size: ${isDotMatrix ? '10px' : '9px'}">(_________________________)</div>
+            </div>
+            <div class="sig-box">
+              <div>Kasir</div>
+              <div style="margin-top: 20px; font-size: ${isDotMatrix ? '10px' : '9px'}">(_________________________)</div>
+            </div>
+          </div>
         </body>
       </html>
     `;
@@ -472,6 +483,13 @@ export default function PrintButtons({
               justify-content: space-between;
             }
             .sig-box { 
+              width: 45%; 
+              text-align: center;
+              border-top: 1px solid #000;
+              padding-top: 20px;
+              font-size: ${fontSize};
+            }
+            .barcode { 
               width: 45%; 
               text-align: center;
               border-top: 1px solid #000;
