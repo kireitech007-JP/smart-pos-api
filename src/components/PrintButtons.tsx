@@ -148,6 +148,27 @@ export default function PrintButtons({
               border-bottom: 2px solid #000;
               background: #fff;
             }
+            .items-header {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              padding-bottom: 5px;
+              border-bottom: 1px solid #ddd;
+              font-weight: bold;
+              font-size: ${isDotMatrix ? '10px' : '9px'};
+            }
+            .item-header-name {
+              flex: 1;
+              margin-right: 10px;
+            }
+            .item-header-qty {
+              width: 30px;
+              text-align: center;
+            }
+            .item-header-price {
+              width: 60px;
+              text-align: right;
+            }
             .no-items {
               text-align: center;
               color: #666;
@@ -210,7 +231,8 @@ export default function PrintButtons({
         </head>
         <body>
           <div class="header">
-            <div class="title">SMART RETAIL POS</div>
+            <div class="title">INVOICE</div>
+            <div class="subtitle">SMART RETAIL POS</div>
             <div class="subtitle">Jl. Contoh No. 123, Jakarta</div>
             <div class="subtitle">Telp: (021) 1234-5678</div>
           </div>
@@ -235,6 +257,11 @@ export default function PrintButtons({
           </div>
           
           <div class="items">
+            <div class="items-header">
+              <div class="item-header-name">Produk</div>
+              <div class="item-header-qty">Qty</div>
+              <div class="item-header-price">Harga</div>
+            </div>
             ${tx.items && tx.items.length > 0 ? tx.items.map(item => `
               <div class="item-row">
                 <div class="item-name">${item.productName}</div>
@@ -370,6 +397,27 @@ export default function PrintButtons({
               border-bottom: 2px solid #000;
               background: #fff;
             }
+            .items-header {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              padding-bottom: 5px;
+              border-bottom: 1px solid #ddd;
+              font-weight: bold;
+              font-size: ${isDotMatrix ? '10px' : '9px'};
+            }
+            .item-header-name {
+              flex: 1;
+              margin-right: 10px;
+            }
+            .item-header-qty {
+              width: 30px;
+              text-align: center;
+            }
+            .item-header-price {
+              width: 60px;
+              text-align: right;
+            }
             .no-items {
               text-align: center;
               color: #666;
@@ -464,6 +512,11 @@ export default function PrintButtons({
           </div>
           
           <div class="items">
+            <div class="items-header">
+              <div class="item-header-name">Produk</div>
+              <div class="item-header-qty">Qty</div>
+              <div class="item-header-price">Harga</div>
+            </div>
             ${tx.items && tx.items.length > 0 ? tx.items.map(item => `
               <div class="item-row">
                 <div class="item-name">${item.productName}</div>
