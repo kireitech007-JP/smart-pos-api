@@ -220,6 +220,18 @@ export default function PrintButtons({
               background: ${isDotMatrix ? 'transparent' : '#f5f5f5'};
               border: ${isDotMatrix ? '1px solid #000' : 'none'};
             }
+            .payment-details {
+              margin-top: 10px;
+              padding: 10px;
+              background: ${isDotMatrix ? 'transparent' : '#f9f9f9'};
+              border: 1px solid #ddd;
+              border-radius: 5px;
+            }
+            .payment-row { 
+              display: flex; 
+              justify-content: space-between; 
+              margin: 3px 0;
+            }
             .footer { 
               margin-top: 20px;
               text-align: center;
@@ -310,27 +322,27 @@ export default function PrintButtons({
             </div>
           </div>
           
-          <div class="payment">
-            <div class="info-row">
+          <div class="payment-details">
+            <div class="payment-row">
               <span>Payment</span>
               <span>${tx.paymentType === 'cash' ? 'Tunai' : tx.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}</span>
             </div>
-            ${tx.paymentType === 'cash' && tx.cashReceived ? `
-              <div class="info-row">
+            ${tx.paymentType === 'cash' && (tx.cashPaid || tx.cashReceived) ? `
+              <div class="payment-row">
                 <span>Tunai</span>
-                <span>${formatRupiah(tx.cashReceived)}</span>
+                <span>${formatRupiah(tx.cashPaid || tx.cashReceived)}</span>
               </div>
-              <div class="info-row">
+              <div class="payment-row">
                 <span>Kembali</span>
-                <span>${formatRupiah(tx.cashChange || 0)}</span>
+                <span>${formatRupiah(tx.change || tx.cashChange || 0)}</span>
               </div>
             ` : ''}
             ${tx.paymentType === 'credit' ? `
-              <div class="info-row">
+              <div class="payment-row">
                 <span>DP</span>
                 <span>${formatRupiah(tx.dp || 0)}</span>
               </div>
-              <div class="info-row">
+              <div class="payment-row">
                 <span>Sisa</span>
                 <span>${formatRupiah(tx.grandTotal - (tx.dp || 0))}</span>
               </div>
