@@ -770,6 +770,9 @@ export default function PrintButtons({
     
     if (printType === 'invoice' && transaction) {
       htmlContent = generateInvoiceHTML(transaction);
+    } else if (printType === 'faktur' && transaction) {
+      // For faktur, convert single transaction to array format
+      htmlContent = generateFakturHTML([transaction]);
     } else if (printType === 'faktur' && transactions.length > 0) {
       htmlContent = generateFakturHTML(transactions);
     } else if (printType === 'session' && sessionData) {

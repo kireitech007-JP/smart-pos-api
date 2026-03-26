@@ -167,7 +167,13 @@ export default function CashierDashboard() {
         amount: t.grandTotal,
         customerName: t.customerName,
         paymentType: t.paymentType,
-        items: t.items.length
+        grandTotal: t.grandTotal,
+        subtotal: t.subtotal,
+        items: t.items,
+        dp: t.dp,
+        tax: t.tax,
+        discount: t.discount,
+        cashierName: t.cashierName
       })),
       // Cash In transactions
       ...sessionCashIn.map(c => ({
