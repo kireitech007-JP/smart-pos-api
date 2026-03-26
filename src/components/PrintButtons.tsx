@@ -68,7 +68,7 @@ export default function PrintButtons({
           <style>
             @page { 
               margin: ${isDotMatrix ? '20px' : '10px'}; 
-              size: ${paperWidth}mm auto;
+              size: 9.5in 11in;
             }
             body { 
               font-family: ${fontFamily}; 
@@ -280,7 +280,7 @@ export default function PrintButtons({
           <style>
             @page { 
               margin: ${isDotMatrix ? '20px' : '10px'}; 
-              size: ${paperWidth === 58 ? '58mm auto' : '80mm auto'};
+              size: 9.5in 11in;
             }
             body { 
               font-family: ${fontFamily}; 
@@ -463,7 +463,7 @@ export default function PrintButtons({
           <style>
             @page { 
               margin: ${isDotMatrix ? '20px' : '10px'}; 
-              size: ${paperWidth === 58 ? '58mm auto' : '80mm auto'};
+              size: 9.5in 11in;
             }
             body { 
               font-family: ${fontFamily}; 

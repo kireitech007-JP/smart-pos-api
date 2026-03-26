@@ -29,7 +29,7 @@ export default function CashierPOS() {
   const [showInvoice, setShowInvoice] = useState<Transaction | null>(null);
   const [showCashierOpen, setShowCashierOpen] = useState(false);
   const [showCashierClose, setShowCashierClose] = useState(false);
-  const [activePage, setActivePage] = useState<'dashboard' | 'cashin' | 'pos' | 'cart' | 'expense' | 'debt'>('dashboard');
+  const [activePage, setActivePage] = useState<'dashboard' | 'cashin' | 'pos' | 'expense' | 'debt'>('dashboard');
 
   // Payment state
   const [paymentType, setPaymentType] = useState<'cash' | 'transfer' | 'credit'>('cash');
@@ -67,16 +67,6 @@ export default function CashierPOS() {
     additionalStock: 0,
     notes: ''
   });
-
-  // Cart state for kilogram sales
-  const [kgCartItems, setKgCartItems] = useState<Array<{
-    productId: string;
-    productName: string;
-    price: number;
-    quantity: number;
-    weight: number; // in kg
-    subtotal: number;
-  }>>([]);
 
   // Add debt manual state
   const [manualDebt, setManualDebt] = useState({
@@ -145,8 +135,8 @@ export default function CashierPOS() {
       toast.error('Pilih produk terlebih dahulu!');
       return;
     }
-    if (addStockProduct.additionalStock <= 0) {
-      toast.error('Jumlah stok harus lebih dari 0!');
+    if (addStockProduct.additionalStock < 0) {
+      toast.error('Jumlah stok harus lebih dari atau sama dengan 0!');
       return;
     }
 
@@ -432,7 +422,7 @@ export default function CashierPOS() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {['dashboard', 'cashin', 'pos', 'cart', 'expense', 'debt'].map(page => {
+          {['dashboard', 'cashin', 'pos', 'expense', 'debt'].map(page => {
             console.log('Rendering menu item:', page, 'activePage:', activePage);
             return (
               <button key={page} onClick={() => {
@@ -440,7 +430,7 @@ export default function CashierPOS() {
                 setActivePage(page as any);
               }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${activePage === page ? 'primary-gradient text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
-                {page === 'dashboard' ? 'Dashboard' : page === 'cashin' ? 'Kas Masuk' : page === 'pos' ? 'Kasir' : page === 'cart' ? 'Keranjang' : page === 'expense' ? 'Pengeluaran' : 'Piutang'}
+                {page === 'dashboard' ? 'Dashboard' : page === 'cashin' ? 'Kas Masuk' : page === 'pos' ? 'Kasir' : page === 'expense' ? 'Pengeluaran' : 'Piutang'}
               </button>
             );
           })}
@@ -537,37 +527,51 @@ export default function CashierPOS() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {cartItems.map(c => (
-                <div key={c.productId} className="bg-muted/50 rounded-lg p-3 animate-scale-in">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground truncate">{c.product.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatRupiah(c.product.price)}</p>
-                    </div>
-                    <button onClick={() => removeFromCart(c.productId)} className="p-1 rounded hover:bg-destructive/10">
-                      <X className="w-4 h-4 text-destructive" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => c.qty > 1 ? updateCartQty(c.productId, c.qty - 1) : removeFromCart(c.productId)}
-                        className="w-7 h-7 rounded-lg bg-card flex items-center justify-center hover:bg-muted">
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="text-sm font-bold text-foreground w-8 text-center">{c.qty}</span>
-                      <button onClick={() => updateCartQty(c.productId, c.qty + 1)}
-                        className="w-7 h-7 rounded-lg bg-card flex items-center justify-center hover:bg-muted">
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-                    <p className="text-sm font-bold text-foreground">{formatRupiah(c.product.price * c.qty)}</p>
-                  </div>
+              {cartItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Keranjang kosong</p>
                 </div>
-              ))}
-              {cartItems.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <ShoppingCart className="w-12 h-12 mb-3 opacity-30" />
-                  <p className="text-sm">Keranjang kosong</p>
+              ) : (
+                <div className="space-y-3">
+                  {cartItems.map((c, index) => {
+                    const product = products.find(p => p.id === c.productId);
+                    if (!product) return null;
+                    
+                    return (
+                      <div key={c.productId} className="bg-background rounded-lg p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-foreground">{product.name}</h4>
+                          <button 
+                            onClick={() => removeFromCart(c.productId)}
+                            className="text-destructive hover:bg-destructive/10 p-1 rounded"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <label className="text-muted-foreground">Jumlah</label>
+                            <input
+                              type="number"
+                              value={c.qty}
+                              onChange={e => {
+                                const newQty = parseFloat(e.target.value) || 0;
+                                updateCartQty(c.productId, newQty);
+                              }}
+                              className="w-full px-2 py-1 rounded border border-input bg-background text-foreground"
+                              step="0.1"
+                              min="0.1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-muted-foreground">Subtotal</label>
+                            <p className="font-medium text-primary">{formatRupiah(product.price * c.qty)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -582,137 +586,6 @@ export default function CashierPOS() {
                 <DollarSign className="w-5 h-5" /> Bayar
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {activePage === 'cart' && (
-        <div className="flex-1 flex overflow-hidden">
-          {/* Product Selection */}
-          <div className="flex-1 flex flex-col overflow-hidden p-4">
-            <div className="flex gap-2 mb-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input 
-                  value={searchQuery} 
-                  onChange={e => setSearchQuery(e.target.value)} 
-                  placeholder="Cari produk..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" 
-                />
-              </div>
-              <select 
-                value={selectedUnit} 
-                onChange={e => setSelectedUnit(e.target.value)}
-                className="px-3 py-2.5 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Semua Unit</option>
-                {units.filter(u => u.id === currentUser?.unitId).map(unit => (
-                  <option key={unit.id} value={unit.id}>{unit.name}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 content-start">
-              {filteredProducts.map(p => {
-                const stock = getProductStock(p);
-                const inCart = kgCartItems.find(c => c.productId === p.id);
-                return (
-                  <button 
-                    key={p.id} 
-                    onClick={() => stock > 0 && addToCartKg(p.id, 1)} 
-                    disabled={stock <= 0}
-                    className={`bg-card rounded-xl p-4 text-left shadow-card hover:shadow-elevated transition-all relative ${stock <= 0 ? 'opacity-50' : 'hover:scale-[1.02]'}`}
-                  >
-                    {stock <= 5 && stock > 0 && (
-                      <div className="absolute top-2 right-2">
-                        <AlertTriangle className="w-4 h-4 text-accent" />
-                      </div>
-                    )}
-                    {inCart && (
-                      <div className="absolute top-2 left-2 w-6 h-6 rounded-full primary-gradient flex items-center justify-center text-xs font-bold text-primary-foreground">
-                        {inCart.weight}kg
-                      </div>
-                    )}
-                    <Package className="w-8 h-8 text-primary/30 mb-2" />
-                    <p className="text-sm font-semibold text-foreground truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.supplier}</p>
-                    <p className="text-sm font-bold text-primary mt-1">{formatRupiah(p.price)}/kg</p>
-                    <p className="text-xs text-muted-foreground">Stok: {stock}kg</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Cart */}
-          <div className="w-96 bg-card border-l border-border flex flex-col">
-            <div className="p-4 border-b border-border">
-              <h3 className="font-bold text-foreground flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
-                Keranjang Kilogram
-              </h3>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4">
-              {kgCartItems.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Keranjang kosong</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {kgCartItems.map((item, index) => (
-                    <div key={index} className="bg-background rounded-lg p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-foreground">{item.productName}</h4>
-                        <button 
-                          onClick={() => removeFromCartKg(index)}
-                          className="text-destructive hover:bg-destructive/10 p-1 rounded"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <label className="text-muted-foreground">Berat (kg)</label>
-                          <input
-                            type="number"
-                            value={item.weight}
-                            onChange={e => updateCartItemWeight(index, parseFloat(e.target.value) || 0)}
-                            className="w-full px-2 py-1 rounded border border-input bg-background text-foreground"
-                            step="0.1"
-                            min="0.1"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-muted-foreground">Subtotal</label>
-                          <p className="font-medium text-primary">{formatRupiah(item.subtotal)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {kgCartItems.length > 0 && (
-              <div className="p-4 border-t border-border space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total Berat:</span>
-                  <span className="font-medium">{kgCartItems.reduce((sum, item) => sum + item.weight, 0).toFixed(1)} kg</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total:</span>
-                  <span className="text-primary">{formatRupiah(kgCartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
-                </div>
-                <button 
-                  onClick={() => setShowPayment(true)}
-                  className="w-full py-3 primary-gradient text-primary-foreground rounded-lg font-semibold hover:opacity-90"
-                >
-                  Proses Pembayaran
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
