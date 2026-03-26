@@ -105,30 +105,29 @@ export default function CashierDashboard() {
   const handleSendWhatsApp = (transaction: any) => {
     // Format items detail
     const itemsDetail = transaction.items && transaction.items.length > 0 
-      ? transaction.items.map(item => `• ${item.productName} x${item.qty} = ${formatRupiah(item.price * item.qty)}`).join('\n')
-      : '• Tidak ada item';
+      ? transaction.items.map(item => `${item.productName}\n  ${item.qty} ${item.unit || 'pcs'} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.qty)}`).join('\n\n')
+      : 'Tidak ada item';
     
-    // Create detailed message
-    const msg = `*🧾 SMART RETAIL POS - INVOICE*
-📅 Tanggal: ${formatDateTime(transaction.date)}
-🔑 No: ${transaction.id.slice(-6).toUpperCase()}
-👤 Kasir: ${transaction.cashierName || 'System'}
-🛒 Pelanggan: ${transaction.customerName || 'Umum'}
-
-📦 *Detail Pesanan:*
+    // Create simple message format
+    const msg = `TOKO PAKAN YARDEN
+  Tonelet
+  08124476200
+================================
+No: ${transaction.id.slice(-6).toUpperCase()}
+Tgl: ${formatDateTime(transaction.date)}
+Kasir: ${transaction.cashierName || 'System'}
+================================
 ${itemsDetail}
-
-💰 *Rincian Pembayaran:*
+================================
 Subtotal: ${formatRupiah(transaction.subtotal || transaction.total || 0)}
-${transaction.discount > 0 ? `Discount: -${formatRupiah(transaction.discount)}\n` : ''}${transaction.tax > 0 ? `Tax: ${formatRupiah(transaction.tax)}\n` : ''}${transaction.dp && transaction.dp < transaction.grandTotal ? `DP: ${formatRupiah(transaction.dp)}\nSisa: ${formatRupiah(transaction.grandTotal - transaction.dp)}\n` : ''}🔥 *TOTAL: ${formatRupiah(transaction.grandTotal)}*
-
-${transaction.paymentType ? `💳 Metode: ${transaction.paymentType === 'cash' ? 'Tunai' : transaction.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}\n${transaction.cashPaid ? `💵 Dibayar: ${formatRupiah(transaction.cashPaid)}\n🔄 Kembalian: ${formatRupiah(transaction.change || 0)}` : ''}` : ''}
-
-📍 ${storeSettings?.address || 'Jl. Contoh No. 123, Jakarta'}
-📞 ${storeSettings?.phone || '(021) 1234-5678'}
-
-Terima kasih atas kunjungan Anda! 🙏
-Barang yang sudah dibeli tidak dapat dikembalikan.`;
+TOTAL: ${formatRupiah(transaction.grandTotal)}
+================================
+Bayar: ${transaction.paymentType === 'cash' ? 'Tunai' : transaction.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}
+Pelanggan: ${transaction.customerName || 'Umum'}
+${transaction.paymentType === 'credit' ? `DP: ${formatRupiah(transaction.dp || 0)}` : ''}
+${transaction.paymentType === 'cash' && transaction.cashPaid ? `Dibayar: ${formatRupiah(transaction.cashPaid)}\nKembali: ${formatRupiah(transaction.change || 0)}` : ''}
+================================
+Terima Kasih!`;
     
     const phone = transaction.customerPhone?.replace(/[^0-9]/g, '');
     if (phone) {
