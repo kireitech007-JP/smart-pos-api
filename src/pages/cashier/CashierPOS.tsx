@@ -1323,11 +1323,14 @@ export default function CashierPOS() {
                   className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">-- Pilih Produk --</option>
-                  {unitProducts.map(product => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} - Stok: {product.stock} {product.satuan || 'pcs'}
-                    </option>
-                  ))}
+                  {unitProducts.map(product => {
+                    const currentStock = getProductStock(product);
+                    return (
+                      <option key={product.id} value={product.id}>
+                        {product.name} - Stok: {currentStock} {product.satuan || 'pcs'}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               
@@ -1359,6 +1362,7 @@ export default function CashierPOS() {
                   <p className="font-medium text-foreground mb-2">Informasi Produk:</p>
                   {(() => {
                     const selectedProduct = products.find(p => p.id === addStockProduct.productId);
+                    const currentStock = selectedProduct ? getProductStock(selectedProduct) : 0;
                     return selectedProduct ? (
                       <>
                         <div className="grid grid-cols-2 gap-2 mb-2">
@@ -1371,7 +1375,7 @@ export default function CashierPOS() {
                         </div>
                         <div className="grid grid-cols-2 gap-2 mb-2">
                           <p className="text-muted-foreground">Stok Saat Ini:</p>
-                          <p className="text-foreground font-medium">{selectedProduct.stock} {selectedProduct.satuan || 'pcs'}</p>
+                          <p className="text-foreground font-medium">{currentStock} {selectedProduct.satuan || 'pcs'}</p>
                         </div>
                         {addStockProduct.additionalStock > 0 && (
                           <>
@@ -1381,7 +1385,7 @@ export default function CashierPOS() {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               <p className="text-muted-foreground">Stok Setelah:</p>
-                              <p className="text-primary font-bold">{selectedProduct.stock + addStockProduct.additionalStock} {selectedProduct.satuan || 'pcs'}</p>
+                              <p className="text-primary font-bold">{currentStock + addStockProduct.additionalStock} {selectedProduct.satuan || 'pcs'}</p>
                             </div>
                           </>
                         )}
