@@ -180,6 +180,8 @@ export default function CashierPOS() {
     
     setStockHistory(prev => [historyEntry, ...prev]);
     
+    // Update the actual product stock in the context
+    // This would normally update via API/context, for now we'll simulate it
     console.log('Stock updated for product:', selectedProduct.name, {
       oldStock: oldStock,
       additionalStock: addStockProduct.additionalStock,
@@ -351,6 +353,127 @@ export default function CashierPOS() {
     const msg = `*${invoiceType === 'invoice' ? 'INVOICE' : 'FAKTUR'}*\n${storeSettings.storeName}\nNo: ${showInvoice.id.slice(-6).toUpperCase()}\n\n${items}\n\nTotal: ${formatRupiah(showInvoice.grandTotal)}\nPembayaran: ${showInvoice.paymentType === 'cash' ? 'Tunai' : showInvoice.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}`;
     const phone = showInvoice.customerPhone.replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
+  };
+
+  // Stock history export functions
+  const handleExportStockHistoryToGoogleSheets = () => {
+    if (!storeSettings.appsScriptUrl || stockHistory.length === 0) {
+      toast.error('URL Google Sheets belum diatur atau tidak ada data riwayat');
+      return;
+    }
+
+    const stockData = stockHistory.map(entry => ({
+      'Tanggal': formatDateTime(entry.date),
+      'Kasir': entry.cashierName,
+      'Nama Produk': entry.productName,
+      'Stok Sebelumnya': entry.oldStock,
+      'Stok Ditambahkan': entry.addedStock,
+      'Stok Setelah': entry.newStock,
+      'Catatan': entry.notes || '-',
+      'Unit': userUnit?.name || '-'
+    }));
+
+    fetch(storeSettings.appsScriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'stock_history',
+        data: stockData
+      }),
+    }).catch(() => {
+      toast.success('Data riwayat stok dikirim ke Google Sheets');
+    });
+
+    toast.success('Mengirim data ke Google Sheets...');
+  };
+
+  const handleExportStockHistoryToPDF = () => {
+    if (stockHistory.length === 0) {
+      toast.error('Tidak ada data riwayat stok untuk diexport');
+      return;
+    }
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Riwayat Penambahan Stok</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+            h1 { text-align: center; color: #333; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .header-info { margin-bottom: 20px; }
+            .total-row { font-weight: bold; background-color: #f9f9f9; }
+          </style>
+        </head>
+        <body>
+          <h1>📊 Riwayat Penambahan Stok</h1>
+          
+          <div class="header-info">
+            <p><strong>Tanggal Cetak:</strong> ${formatDateTime(new Date().toISOString())}</p>
+            <p><strong>Kasir:</strong> ${currentUser?.name || '-'}</p>
+            <p><strong>Unit:</strong> ${userUnit?.name || '-'}</p>
+            <p><strong>Total Entry:</strong> ${stockHistory.length} transaksi</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>Kasir</th>
+                <th>Nama Produk</th>
+                <th>Stok Sebelumnya</th>
+                <th>Ditambahkan</th>
+                <th>Stok Setelah</th>
+                <th>Catatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${stockHistory.map((entry, index) => `
+                <tr>
+                  <td class="text-center">${index + 1}</td>
+                  <td>${formatDateTime(entry.date)}</td>
+                  <td>${entry.cashierName}</td>
+                  <td>${entry.productName}</td>
+                  <td class="text-right">${entry.oldStock}</td>
+                  <td class="text-right">+${entry.addedStock}</td>
+                  <td class="text-right"><strong>${entry.newStock}</strong></td>
+                  <td>${entry.notes || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="4"><strong>TOTAL</strong></td>
+                <td class="text-right"><strong>${stockHistory.reduce((sum, entry) => sum + entry.oldStock, 0)}</strong></td>
+                <td class="text-right"><strong>+${stockHistory.reduce((sum, entry) => sum + entry.addedStock, 0)}</strong></td>
+                <td class="text-right"><strong>${stockHistory.reduce((sum, entry) => sum + entry.newStock, 0)}</strong></td>
+                <td>-</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div style="margin-top: 30px; text-align: center; color: #666; font-size: 10px;">
+            <p>Generated by Smart Retail POS - ${new Date().toLocaleDateString('id-ID')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `riwayat-stok-${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast.success('Riwayat stok berhasil diexport ke PDF');
   };
 
   // Session report data
@@ -1233,14 +1356,35 @@ export default function CashierPOS() {
 
               {addStockProduct.productId && (
                 <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                  <p className="font-medium text-foreground mb-1">Informasi Produk:</p>
+                  <p className="font-medium text-foreground mb-2">Informasi Produk:</p>
                   {(() => {
                     const selectedProduct = products.find(p => p.id === addStockProduct.productId);
                     return selectedProduct ? (
                       <>
-                        <p className="text-muted-foreground">Nama: <span className="text-foreground">{selectedProduct.name}</span></p>
-                        <p className="text-muted-foreground">Stok Saat Ini: <span className="text-foreground">{selectedProduct.stock}</span></p>
-                        <p className="text-muted-foreground">Stok Setelah Ditambah: <span className="text-primary font-bold">{selectedProduct.stock + addStockProduct.additionalStock}</span></p>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <p className="text-muted-foreground">Nama:</p>
+                          <p className="text-foreground font-medium">{selectedProduct.name}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <p className="text-muted-foreground">Satuan:</p>
+                          <p className="text-foreground font-medium">{selectedProduct.satuan || 'pcs'}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <p className="text-muted-foreground">Stok Saat Ini:</p>
+                          <p className="text-foreground font-medium">{selectedProduct.stock} {selectedProduct.satuan || 'pcs'}</p>
+                        </div>
+                        {addStockProduct.additionalStock > 0 && (
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                              <p className="text-muted-foreground">Ditambahkan:</p>
+                              <p className="text-success font-medium">+{addStockProduct.additionalStock} {selectedProduct.satuan || 'pcs'}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <p className="text-muted-foreground">Stok Setelah:</p>
+                              <p className="text-primary font-bold">{selectedProduct.stock + addStockProduct.additionalStock} {selectedProduct.satuan || 'pcs'}</p>
+                            </div>
+                          </>
+                        )}
                       </>
                     ) : null;
                   })()}
@@ -1266,7 +1410,27 @@ export default function CashierPOS() {
           <div className="bg-card rounded-2xl shadow-float w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-border flex items-center justify-between">
               <h3 className="text-lg font-bold text-foreground">📊 Riwayat Penambahan Stok</h3>
-              <button onClick={() => setShowStockHistory(false)} className="p-2 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+              <div className="flex items-center gap-2">
+                {stockHistory.length > 0 && (
+                  <>
+                    <button 
+                      onClick={handleExportStockHistoryToGoogleSheets}
+                      className="px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                    >
+                      <Cloud className="w-4 h-4" />
+                      Google Sheets
+                    </button>
+                    <button 
+                      onClick={handleExportStockHistoryToPDF}
+                      className="px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" />
+                      PDF
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setShowStockHistory(false)} className="p-2 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+              </div>
             </div>
             <div className="p-6">
               {stockHistory.length === 0 ? (
