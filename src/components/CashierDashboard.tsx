@@ -125,7 +125,7 @@ TOTAL: ${formatRupiah(transaction.grandTotal)}
 Bayar: ${transaction.paymentType === 'cash' ? 'Tunai' : transaction.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}
 Pelanggan: ${transaction.customerName || 'Umum'}
 ${transaction.paymentType === 'credit' ? `DP: ${formatRupiah(transaction.dp || 0)}` : ''}
-${transaction.paymentType === 'cash' && transaction.cashPaid ? `Dibayar: ${formatRupiah(transaction.cashPaid)}\nKembali: ${formatRupiah(transaction.change || 0)}` : ''}
+${transaction.paymentType === 'cash' ? `Dibayar: ${formatRupiah(transaction.cashPaid || transaction.grandTotal)}\nKembali: ${formatRupiah((transaction.cashPaid || transaction.grandTotal) - transaction.grandTotal)}` : ''}
 ================================
 Terima Kasih!`;
     
