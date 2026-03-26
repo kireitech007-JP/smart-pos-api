@@ -103,7 +103,33 @@ export default function CashierDashboard() {
   };
 
   const handleSendWhatsApp = (transaction: any) => {
-    const msg = `*INVOICE*\n${transaction.customerName || 'Umum'}\nTotal: ${formatRupiah(transaction.grandTotal)}\nTerima kasih!`;
+    // Format items detail
+    const itemsDetail = transaction.items && transaction.items.length > 0 
+      ? transaction.items.map(item => `• ${item.productName} x${item.qty} = ${formatRupiah(item.price * item.qty)}`).join('\n')
+      : '• Tidak ada item';
+    
+    // Create detailed message
+    const msg = `*🧾 SMART RETAIL POS - INVOICE*
+📅 Tanggal: ${formatDateTime(transaction.date)}
+🔑 No: ${transaction.id.slice(-6).toUpperCase()}
+👤 Kasir: ${transaction.cashierName || 'System'}
+🛒 Pelanggan: ${transaction.customerName || 'Umum'}
+
+📦 *Detail Pesanan:*
+${itemsDetail}
+
+💰 *Rincian Pembayaran:*
+Subtotal: ${formatRupiah(transaction.subtotal || transaction.total || 0)}
+${transaction.discount > 0 ? `Discount: -${formatRupiah(transaction.discount)}\n` : ''}${transaction.tax > 0 ? `Tax: ${formatRupiah(transaction.tax)}\n` : ''}${transaction.dp && transaction.dp < transaction.grandTotal ? `DP: ${formatRupiah(transaction.dp)}\nSisa: ${formatRupiah(transaction.grandTotal - transaction.dp)}\n` : ''}🔥 *TOTAL: ${formatRupiah(transaction.grandTotal)}*
+
+${transaction.paymentType ? `💳 Metode: ${transaction.paymentType === 'cash' ? 'Tunai' : transaction.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}\n${transaction.cashPaid ? `💵 Dibayar: ${formatRupiah(transaction.cashPaid)}\n🔄 Kembalian: ${formatRupiah(transaction.change || 0)}` : ''}` : ''}
+
+📍 ${storeSettings?.address || 'Jl. Contoh No. 123, Jakarta'}
+📞 ${storeSettings?.phone || '(021) 1234-5678'}
+
+Terima kasih atas kunjungan Anda! 🙏
+Barang yang sudah dibeli tidak dapat dikembalikan.`;
+    
     const phone = transaction.customerPhone?.replace(/[^0-9]/g, '');
     if (phone) {
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);

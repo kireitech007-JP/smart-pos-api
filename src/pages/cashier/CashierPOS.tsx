@@ -618,12 +618,33 @@ export default function CashierPOS() {
 
   const handleWhatsAppDebtInvoice = () => {
     if (!showDebtInvoice) return;
-    const msg = `*BUKTI PEMBAYARAN PIUTANG*\n${storeSettings?.storeName || 'Toko'}\nNo: DEBT-${Date.now().toString().slice(-6).toUpperCase()}\n\nPelanggan: ${selectedDebt?.customerName}\nJumlah Bayar: ${formatRupiah(paymentAmount)}\nSisa Piutang: ${formatRupiah((selectedDebt?.remainingAmount || 0) - paymentAmount)}\n\nTerima kasih telah melakukan pembayaran.`;
+    
+    // Create detailed debt payment message
+    const msg = `*🧾 SMART RETAIL POS - BUKTI PEMBAYARAN PIUTANG*
+📅 Tanggal: ${formatDateTime(new Date().toISOString())}
+🔑 No: DEBT-${Date.now().toString().slice(-6).toUpperCase()}
+👤 Kasir: ${currentUser?.name || 'System'}
+🛒 Pelanggan: ${selectedDebt?.customerName || 'Umum'}
+
+💰 *Detail Pembayaran:*
+Total Piutang: ${formatRupiah(selectedDebt?.totalAmount || 0)}
+Jumlah Dibayar: ${formatRupiah(paymentAmount)}
+Sisa Piutang: ${formatRupiah((selectedDebt?.remainingAmount || 0) - paymentAmount)}
+${paymentNotes ? `📝 Catatan: ${paymentNotes}` : ''}
+
+🔥 *Total Pembayaran: ${formatRupiah(paymentAmount)}*
+
+📍 ${storeSettings?.address || 'Jl. Contoh No. 123, Jakarta'}
+📞 ${storeSettings?.phone || '(021) 1234-5678'}
+
+Terima kasih telah melakukan pembayaran! 🙏
+Simpan bukti ini sebagai referensi Anda.`;
+    
     const phone = selectedDebt?.customerPhone?.replace(/[^0-9]/g, '');
     if (phone) {
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
     } else {
-      toast.error('Nomor telepon pelanggan tidak tersedia');
+      toast.error('Nomor telepon tidak tersedia');
     }
   };
 

@@ -309,21 +309,20 @@ export default function PrintButtons({
   };
 
   const generateFakturHTML = (txs: Transaction[]) => {
+    // For single transaction, use the first transaction
+    const tx = txs[0];
     const isThermal = selectedPrinter.type === 'thermal';
     const isBluetooth = selectedPrinter.type === 'bluetooth';
     const isDotMatrix = selectedPrinter.type === 'dotmatrix';
     
     const paperWidth = selectedPrinter.paperWidth;
-    const fontSize = isThermal || isBluetooth ? '9px' : '11px';
+    const fontSize = isThermal || isBluetooth ? '10px' : '12px';
     const fontFamily = isDotMatrix ? 'Courier New, monospace' : 'Arial, sans-serif';
-    
-    const grandTotal = txs.reduce((sum, tx) => sum + tx.grandTotal, 0);
-    const totalItems = txs.reduce((sum, tx) => sum + tx.items.reduce((itemSum, item) => itemSum + item.qty, 0), 0);
     
     return `
       <html>
         <head>
-          <title>FAKTUR PENJUALAN</title>
+          <title>FAKTUR - ${tx.id.slice(-6).toUpperCase()}</title>
           <style>
             @page { 
               margin: ${isDotMatrix ? '20px' : '10px'}; 
@@ -334,7 +333,7 @@ export default function PrintButtons({
               font-size: ${fontSize};
               margin: 0; 
               padding: 10px;
-              line-height: 1.1;
+              line-height: 1.2;
             }
             .header { 
               text-align: center; 
@@ -348,65 +347,78 @@ export default function PrintButtons({
               margin: 5px 0;
             }
             .subtitle { 
-              font-size: ${isDotMatrix ? '11px' : '9px'}; 
+              font-size: ${isDotMatrix ? '12px' : '10px'}; 
               margin: 2px 0;
             }
             .info { 
-              margin: 10px 0;
+              margin: 15px 0;
+              padding: 10px;
+              border: 1px solid #ddd;
+              border-radius: 5px;
+              background: #f9f9f9;
               font-size: ${fontSize};
             }
             .info-row { 
               display: flex; 
               justify-content: space-between; 
-              margin: 2px 0;
+              margin: 3px 0;
             }
-            .transactions { 
-              margin: 10px 0;
-              border-top: 1px solid #000;
-              border-bottom: 1px solid #000;
+            .items { 
+              margin: 15px 0;
               padding: 10px 0;
-              max-height: 200px;
-              overflow-y: auto;
-            }
-            .tx-row { 
-              margin: 5px 0;
-              padding: 3px 0;
-              border-bottom: 1px dashed #ccc;
-            }
-            .tx-header { 
-              font-weight: bold;
-              font-size: ${isDotMatrix ? '10px' : '9px'};
-            }
-            .tx-items { 
-              font-size: ${isDotMatrix ? '9px' : '8px'};
-              color: #666;
-              margin: 2px 0;
-            }
-            .tx-details { 
-              font-size: ${isDotMatrix ? '8px' : '7px'};
-              color: #888;
-              font-style: italic;
-              margin: 2px 0;
-            }
-            .summary { 
-              margin-top: 15px;
               border-top: 2px solid #000;
-              padding-top: 10px;
+              border-bottom: 2px solid #000;
+              background: #fff;
             }
-            .summary-row { 
+            .no-items {
+              text-align: center;
+              color: #666;
+              font-style: italic;
+              padding: 20px;
+            }
+            .item-row { 
               display: flex; 
               justify-content: space-between; 
-              margin: 3px 0;
+              margin: 5px 0;
+              font-size: ${fontSize};
+            }
+            .item-name { 
+              flex: 1; 
+              margin-right: 10px;
+            }
+            .item-qty { 
+              width: 30px; 
+              text-align: center;
+            }
+            .item-price { 
+              width: 60px; 
+              text-align: right;
+            }
+            .total { 
+              margin-top: 15px;
+              border-top: 1px solid #000;
+              padding-top: 10px;
+            }
+            .total-row { 
+              display: flex; 
+              justify-content: space-between; 
+              margin: 5px 0;
               font-weight: bold;
+            }
+            .payment { 
+              margin-top: 10px;
+              padding: 10px;
+              background: #f0f0f0;
+              border-radius: 5px;
             }
             .footer { 
               margin-top: 20px;
               text-align: center;
               border-top: 1px dashed #000;
               padding-top: 10px;
-              font-size: ${isDotMatrix ? '9px' : '8px'};
+              font-size: ${isDotMatrix ? '10px' : '9px'};
             }
-            .signature { 
+            .signature {
               margin-top: 30px;
               display: flex;
               justify-content: space-between;
@@ -426,7 +438,7 @@ export default function PrintButtons({
         </head>
         <body>
           <div class="header">
-            <div class="title">FAKTUR PENJUALAN</div>
+            <div class="title">FAKTUR - ${tx.id.slice(-6).toUpperCase()}</div>
             <div class="subtitle">SMART RETAIL POS</div>
             <div class="subtitle">Jl. Contoh No. 123, Jakarta</div>
             <div class="subtitle">Telp: (021) 1234-5678</div>
@@ -434,69 +446,100 @@ export default function PrintButtons({
           
           <div class="info">
             <div class="info-row">
-              <span>No. Faktur</span>
-              <span>FK-${Date.now().toString().slice(-6)}</span>
+              <span>FAKTUR</span>
+              <span>FK-${tx.id.slice(-6).toUpperCase()}</span>
             </div>
             <div class="info-row">
               <span>Tanggal</span>
-              <span>${formatDateTime(new Date().toISOString())}</span>
+              <span>${formatDateTime(tx.date)}</span>
             </div>
             <div class="info-row">
               <span>Kasir</span>
-              <span>${sessionData?.cashierName || 'System'}</span>
+              <span>${tx.cashierName || sessionData?.cashierName || 'System'}</span>
             </div>
             <div class="info-row">
-              <span>Unit</span>
-              <span>${sessionData?.unitName || 'Main Store'}</span>
+              <span>Pelanggan</span>
+              <span>${tx.customerName || 'Umum'}</span>
             </div>
           </div>
           
-          <div class="transactions">
-            ${txs.map(tx => `
-              <div class="tx-row">
-                <div class="tx-header">
-                  ${tx.id.slice(-6).toUpperCase()} - ${tx.customerName || 'Umum'} - ${formatRupiah(tx.grandTotal)}
-                </div>
-                <div class="tx-items">
-                  ${tx.items.map(item => `${item.productName} x${item.qty}`).join(', ')}
-                </div>
-                <div class="tx-details">
-                  Kasir: ${tx.cashierName || 'System'} | ${formatDateTime(tx.date)}
-                </div>
+          <div class="items">
+            ${tx.items && tx.items.length > 0 ? tx.items.map(item => `
+              <div class="item-row">
+                <div class="item-name">${item.productName}</div>
+                <div class="item-qty">${item.qty}</div>
+                <div class="item-price">${formatRupiah(item.price)}</div>
               </div>
-            `).join('')}
+            `).join('') : '<div class="no-items">Tidak ada item</div>'}
           </div>
           
-          <div class="summary">
-            <div class="summary-row">
-              <span>Total Transaksi</span>
-              <span>${txs.length}</span>
+          <div class="total">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span>${formatRupiah(tx.subtotal || tx.total || 0)}</span>
             </div>
-            <div class="summary-row">
-              <span>Total Item</span>
-              <span>${totalItems}</span>
+            ${tx.discount > 0 ? `
+              <div class="total-row">
+                <span>Discount</span>
+                <span>-${formatRupiah(tx.discount)}</span>
+              </div>
+            ` : ''}
+            ${tx.tax > 0 ? `
+              <div class="total-row">
+                <span>Tax (${tx.taxRate}%)</span>
+                <span>${formatRupiah(tx.tax)}</span>
+              </div>
+            ` : ''}
+            ${tx.dp && tx.dp < tx.grandTotal ? `
+              <div class="total-row">
+                <span>DP</span>
+                <span>${formatRupiah(tx.dp)}</span>
+              </div>
+              <div class="total-row">
+                <span>Sisa</span>
+                <span>${formatRupiah(tx.grandTotal - tx.dp)}</span>
+              </div>
+            ` : ''}
+            <div class="total-row" style="font-size: ${isDotMatrix ? '12px' : '14px'}; border-top: 1px solid #000; padding-top: 5px;">
+              <span>TOTAL</span>
+              <span>${formatRupiah(tx.grandTotal)}</span>
             </div>
-            <div class="summary-row" style="font-size: ${isDotMatrix ? '14px' : '12px'}; border-top: 2px solid #000; padding-top: 5px;">
-              <span>GRAND TOTAL</span>
-              <span>${formatRupiah(grandTotal)}</span>
+          </div>
+          
+          ${tx.paymentType ? `
+            <div class="payment">
+              <div class="info-row">
+                <span>Metode Pembayaran</span>
+                <span>${tx.paymentType === 'cash' ? 'Tunai' : tx.paymentType === 'transfer' ? 'Transfer' : 'Kredit'}</span>
+              </div>
+              ${tx.cashPaid ? `
+                <div class="info-row">
+                  <span>Tunai Dibayar</span>
+                  <span>${formatRupiah(tx.cashPaid)}</span>
+                </div>
+                <div class="info-row">
+                  <span>Kembalian</span>
+                  <span>${formatRupiah(tx.change || 0)}</span>
+                </div>
+              ` : ''}
             </div>
+          ` : ''}
+          
+          <div class="footer">
+            <div>Terima kasih atas kunjungan Anda</div>
+            <div>Barang yang sudah dibeli tidak dapat dikembalikan</div>
+            <div>${formatDateTime(new Date().toISOString())}</div>
           </div>
           
           <div class="signature">
             <div class="sig-box">
-              <div>Pembeli</div>
+              <div>Pelanggan</div>
               <div style="margin-top: 20px; font-size: ${isDotMatrix ? '10px' : '9px'}">(_________________________)</div>
             </div>
             <div class="sig-box">
               <div>Kasir</div>
               <div style="margin-top: 20px; font-size: ${isDotMatrix ? '10px' : '9px'}">(_________________________)</div>
             </div>
-          </div>
-          
-          <div class="footer">
-            <div>Faktur ini sah sebagai bukti pembayaran</div>
-            <div>Barang yang sudah dibeli tidak dapat dikembalikan</div>
-            ${isDotMatrix ? '<div>***</div>' : ''}
           </div>
         </body>
       </html>
@@ -717,27 +760,6 @@ export default function PrintButtons({
               <span>${formatRupiah(sessionData?.finalBalance || 0)}</span>
             </div>
           </div>
-          
-          ${!isCompact && cashIn.length > 0 ? `
-          <div class="section">
-            <div class="section-title">KAS MASUK (${cashIn.length})</div>
-            ${cashIn.slice(0, 5).map(ci => `
-              <div class="transaction-row">
-                <div class="transaction-header">
-                  ${ci.ID} - ${ci.Depositor}
-                </div>
-                <div class="transaction-detail">
-                  ${ci.Deskripsi} - ${formatRupiah(ci.Jumlah)}
-                </div>
-              </div>
-            `).join('')}
-            ${cashIn.length > 5 ? `
-              <div class="transaction-detail">
-                ... dan ${cashIn.length - 5} kas masuk lainnya
-              </div>
-            ` : ''}
-          </div>
-          ` : ''}
           
           ${!isCompact && expenses.length > 0 ? `
           <div class="section">
