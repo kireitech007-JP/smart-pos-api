@@ -349,10 +349,6 @@ export default function PrintButtons({
             ` : ''}
           </div>
           
-          <div class="barcode">
-            *${tx.id.slice(-6).toUpperCase()}*
-          </div>
-          
           <div class="footer">
             <div>Terima Kasih</div>
             <div>Selamat Berbelanja Kembali</div>

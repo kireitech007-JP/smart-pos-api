@@ -133,7 +133,8 @@ Terima Kasih!`;
     if (phone) {
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
     } else {
-      toast.error('Nomor telepon tidak tersedia');
+      // Jika tidak ada nomor telepon, buka WhatsApp dengan pesan tanpa nomor tujuan
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
     }
   };
 
