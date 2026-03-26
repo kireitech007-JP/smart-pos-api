@@ -654,14 +654,14 @@ export default function CashierPOS() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4">
-              {cartItems.length === 0 ? (
+              {kgCartItems.length === 0 ? (
                 <div className="text-center py-8">
                   <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">Keranjang kosong</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {cartItems.map((item, index) => (
+                  {kgCartItems.map((item, index) => (
                     <div key={index} className="bg-background rounded-lg p-3">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium text-foreground">{item.productName}</h4>
@@ -695,15 +695,15 @@ export default function CashierPOS() {
               )}
             </div>
             
-            {cartItems.length > 0 && (
+            {kgCartItems.length > 0 && (
               <div className="p-4 border-t border-border space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Berat:</span>
-                  <span className="font-medium">{cartItems.reduce((sum, item) => sum + item.weight, 0).toFixed(1)} kg</span>
+                  <span className="font-medium">{kgCartItems.reduce((sum, item) => sum + item.weight, 0).toFixed(1)} kg</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total:</span>
-                  <span className="text-primary">{formatRupiah(cartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
+                  <span className="text-primary">{formatRupiah(kgCartItems.reduce((sum, item) => sum + item.subtotal, 0))}</span>
                 </div>
                 <button 
                   onClick={() => setShowPayment(true)}
@@ -751,7 +751,68 @@ export default function CashierPOS() {
 
       {activePage === 'debt' && (
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto space-y-6">
+            {/* Add Manual Debt */}
+            <div className="bg-card rounded-xl p-6 shadow-card">
+              <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" /> Tambah Piutang Manual
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Nama Pelanggan *</label>
+                  <input
+                    value={manualDebt.customerName}
+                    onChange={e => setManualDebt(prev => ({ ...prev, customerName: e.target.value }))}
+                    placeholder="Masukkan nama pelanggan"
+                    className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">No. Telepon</label>
+                  <input
+                    value={manualDebt.customerPhone}
+                    onChange={e => setManualDebt(prev => ({ ...prev, customerPhone: e.target.value }))}
+                    placeholder="Masukkan nomor telepon"
+                    className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Jumlah Piutang *</label>
+                  <input
+                    type="number"
+                    value={manualDebt.amount}
+                    onChange={e => setManualDebt(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                    placeholder="0"
+                    min="0"
+                    className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Tanggal</label>
+                  <input
+                    type="date"
+                    value={manualDebt.date.split('T')[0]}
+                    onChange={e => setManualDebt(prev => ({ ...prev, date: new Date(e.target.value).toISOString() }))}
+                    className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="text-sm font-medium text-foreground mb-2 block">Deskripsi</label>
+                <textarea
+                  value={manualDebt.description}
+                  onChange={e => setManualDebt(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Deskripsi piutang (opsional)"
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
+              <button onClick={handleAddManualDebt} className="w-full mt-4 py-3 primary-gradient text-primary-foreground rounded-lg font-semibold hover:opacity-90">
+                Tambah Piutang Manual
+              </button>
+            </div>
+
+            {/* Debt List */}
             <div className="bg-card rounded-xl shadow-card overflow-hidden">
               <h3 className="font-bold text-foreground p-4 border-b border-border flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-primary" /> Daftar Piutang
