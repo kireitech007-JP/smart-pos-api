@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
+import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
+import RealtimeStatus from '@/components/RealtimeStatus';
 import { 
   LayoutDashboard, Package, Users, Receipt, FileText, Settings, LogOut, 
   CreditCard, Store, ChevronLeft, ChevronRight, AlertTriangle, Menu, DollarSign
@@ -22,6 +24,10 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { logout, storeSettings, products, getProductStock } = useApp();
+  const { manualSync, isConnected } = useSupabaseRealtime({
+    enableAutoSync: true,
+    syncInterval: 30000
+  });
   const [activePage, setActivePage] = useState('dashboard');
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -89,16 +95,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </button>
             <h2 className="text-lg font-bold text-foreground capitalize">{menuItems.find(m => m.id === activePage)?.label}</h2>
           </div>
-          {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-lg">
-              <AlertTriangle className="w-4 h-4 text-accent" />
-              <span className="text-xs font-medium text-accent">
-                {outOfStockProducts.length > 0 && `${outOfStockProducts.length} habis`}
-                {outOfStockProducts.length > 0 && lowStockProducts.length > 0 && ', '}
-                {lowStockProducts.length > 0 && `${lowStockProducts.length} menipis`}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <RealtimeStatus onManualSync={manualSync} isConnected={isConnected} />
+            {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-accent" />
+                <span className="text-xs font-medium text-accent">
+                  {outOfStockProducts.length > 0 && `${outOfStockProducts.length} habis`}
+                  {outOfStockProducts.length > 0 && lowStockProducts.length > 0 && ', '}
+                  {lowStockProducts.length > 0 && `${lowStockProducts.length} menipis`}
+                </span>
+              </div>
+            )}
+          </div>
         </header>
         <div className="flex-1 overflow-y-auto p-6">
           {children(activePage)}

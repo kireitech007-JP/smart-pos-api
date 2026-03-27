@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp } from "@/contexts/AppContext";
+import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import SetupPage from "@/pages/Setup";
 import LoginPage from "@/pages/Login";
 import AdminPage from "@/pages/admin/AdminPage";
@@ -51,6 +52,12 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 function AppContent() {
   const { isSetup, currentUser, loading, error } = useApp();
   const [mounted, setMounted] = useState(false);
+  
+  // Enable Supabase Realtime untuk sync antar perangkat
+  const { manualSync, isConnected } = useSupabaseRealtime({
+    enableAutoSync: true,
+    syncInterval: 30000 // Sync setiap 30 detik
+  });
 
   useEffect(() => {
     setMounted(true);

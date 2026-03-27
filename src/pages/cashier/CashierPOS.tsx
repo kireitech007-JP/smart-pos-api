@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useApp, Product, Transaction } from '@/contexts/AppContext';
+import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
+import RealtimeStatus from '@/components/RealtimeStatus';
 import { formatRupiah, formatDateTime } from '@/lib/format';
 import { 
   ShoppingCart, Plus, Minus, X, Search, DollarSign, CreditCard, Banknote, 
@@ -28,6 +30,12 @@ export default function CashierPOS() {
     openCashierSession, closeCashierSession, getActiveSession, cashierSessions,
     transactions, expenses, debts, payDebt, cashIns
   } = useApp();
+
+  // Enable Supabase Realtime untuk sync antar perangkat
+  const { manualSync, isConnected } = useSupabaseRealtime({
+    enableAutoSync: true,
+    syncInterval: 30000
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUnit, setSelectedUnit] = useState('');
@@ -1000,6 +1008,7 @@ Simpan bukti ini sebagai referensi Anda.`;
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <RealtimeStatus onManualSync={manualSync} isConnected={isConnected} />
           {['dashboard', 'cashin', 'pos', 'expense', 'debt'].map(page => {
             console.log('Rendering menu item:', page, 'activePage:', activePage);
             return (
