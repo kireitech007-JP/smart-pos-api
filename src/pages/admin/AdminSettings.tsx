@@ -115,6 +115,7 @@ export default function AdminSettings() {
 
   // Supabase functions
   const handleBackupAllToSupabase = async () => {
+    console.log('handleBackupAllToSupabase called');
     setIsLoading(true);
     try {
       const backupData = {
@@ -131,29 +132,40 @@ export default function AdminSettings() {
         laporan: [],
         sessions
       };
+      console.log('Sending data to Supabase:', backupData);
       await backupAllDataToSupabase(backupData);
+    } catch (error) {
+      console.error('Backup to Supabase error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRestoreAllFromSupabase = async () => {
+    console.log('handleRestoreAllFromSupabase called');
     if (!confirm('Apakah Anda yakin ingin restore semua data dari Supabase Cloud? Data yang ada akan ditimpat!')) {
       return;
     }
     setIsLoading(true);
     try {
+      console.log('Restoring data from Supabase...');
       await restoreAllDataFromSupabase();
       toast.success('Data berhasil di-restore dari Supabase Cloud. Silakan refresh halaman.');
+    } catch (error) {
+      console.error('Restore from Supabase error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleTestSupabaseConnection = async () => {
+    console.log('handleTestSupabaseConnection called');
     setIsLoading(true);
     try {
+      console.log('Testing Supabase connection...');
       await testSupabaseConnection();
+    } catch (error) {
+      console.error('Test Supabase connection error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -257,6 +269,7 @@ export default function AdminSettings() {
               onClick={handleBackupAllToSupabase} 
               disabled={isLoading}
               className="flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 disabled:opacity-50 transition-colors"
+              style={{ display: 'flex', visibility: 'visible' }}
             >
               <Cloud className="w-4 h-4" />
               {isLoading ? 'Mengirim...' : 'Kirim ke Cloud'}
@@ -265,6 +278,7 @@ export default function AdminSettings() {
               onClick={handleRestoreAllFromSupabase} 
               disabled={isLoading}
               className="flex items-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 transition-colors"
+              style={{ display: 'flex', visibility: 'visible' }}
             >
               <CloudOff className="w-4 h-4" />
               {isLoading ? 'Mengambil...' : 'Tarik dari Cloud'}
@@ -276,6 +290,7 @@ export default function AdminSettings() {
               onClick={handleTestSupabaseConnection} 
               disabled={isLoading}
               className="flex items-center gap-2 px-4 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 disabled:opacity-50 transition-colors"
+              style={{ display: 'flex', visibility: 'visible' }}
             >
               <TestTube className="w-4 h-4" />
               {isLoading ? 'Menguji...' : 'Test Koneksi Cloud'}
