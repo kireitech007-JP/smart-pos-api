@@ -53,17 +53,25 @@ const CONFIG = {
 function doPost(e) {
   try {
     // Log raw request untuk debugging
+    const postData = e.postData || e.parameter || {};
     logBackup('RAW_REQUEST', {
-      postData: e.postData,
-      contents: e.postData.contents,
-      contentType: e.postData.type
+      postData: postData,
+      contents: postData.contents || postData,
+      contentType: postData.type || 'unknown'
     }, 'REQUEST', 'Raw request received');
     
     let data;
     try {
-      data = JSON.parse(e.postData.contents);
+      const content = postData.contents || postData;
+      if (typeof content === 'string') {
+        data = JSON.parse(content);
+      } else if (typeof content === 'object') {
+        data = content;
+      } else {
+        throw new Error(`Invalid content type: ${typeof content}`);
+      }
     } catch (parseError) {
-      throw new Error(`Invalid JSON format: ${parseError.message}. Content: ${e.postData.contents}`);
+      throw new Error(`Invalid JSON format: ${parseError.message}. Content: ${JSON.stringify(postData)}`);
     }
     
     const action = data.action;
@@ -151,7 +159,7 @@ function doPost(e) {
           receivedData: data,
           dataType: typeof data,
           dataKeys: Object.keys(data),
-          rawContent: e.postData.contents
+          rawContent: postData.contents || postData
         };
         break;
       default:
@@ -167,16 +175,16 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
-    logBackup('ERROR', e.postData ? e.postData.contents : 'No post data', 'ERROR', error.message);
+    logBackup('ERROR', postData ? postData.contents || postData : 'No post data', 'ERROR', error.message);
     
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.message,
       message: 'Request failed',
       debug: {
-        hasPostData: !!e.postData,
-        postDataType: typeof e.postData,
-        postDataContents: e.postData ? e.postData.contents : 'No contents'
+        hasPostData: !!postData,
+        postDataType: typeof postData,
+        postDataContents: postData ? postData.contents || postData : 'No contents'
       }
     })).setMimeType(ContentService.MimeType.JSON);
   }
