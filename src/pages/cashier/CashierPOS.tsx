@@ -1012,6 +1012,12 @@ Simpan bukti ini sebagai referensi Anda.`;
               </button>
             );
           })}
+          <button onClick={handleTestConnection} disabled={isBackupLoading} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 disabled:opacity-50">
+            <Database className="w-3 h-3 inline mr-1" />{isBackupLoading ? 'Testing...' : 'Test'}
+          </button>
+          <button onClick={handleBackupAll} disabled={isBackupLoading} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 disabled:opacity-50">
+            <Cloud className="w-3 h-3 inline mr-1" />{isBackupLoading ? 'Backup...' : 'Backup'}
+          </button>
           <button onClick={() => setShowCashierClose(true)} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20">
             <Clock className="w-3 h-3 inline mr-1" />Tutup Kasir
           </button>
