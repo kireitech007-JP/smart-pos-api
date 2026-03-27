@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
 import RealtimeStatus from '@/components/RealtimeStatus';
+import SheetSyncButton from '@/components/SheetSyncButton';
 import { 
   LayoutDashboard, Package, Users, Receipt, FileText, Settings, LogOut, 
   CreditCard, Store, ChevronLeft, ChevronRight, AlertTriangle, Menu, DollarSign
@@ -97,6 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           <div className="flex items-center gap-3">
             <RealtimeStatus onManualSync={manualSync} isConnected={isConnected} />
+            <SheetSyncButton mode="auto" className="ml-2" />
             {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-lg">
                 <AlertTriangle className="w-4 h-4 text-accent" />

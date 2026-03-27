@@ -194,3 +194,110 @@ export const clearAllData = async (): Promise<GoogleSheetsResponse> => {
 export const debugRequest = async (data: any): Promise<GoogleSheetsResponse> => {
   return sendToGoogleSheets('debugRequest', data);
 };
+
+// Fungsi auto-sync data ke Google Sheets (tombol sheet)
+export const autoSyncToSheets = async (): Promise<GoogleSheetsResponse> => {
+  try {
+    // Ambil semua data dari localStorage
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+    const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+    const cashIn = JSON.parse(localStorage.getItem('cashIn') || '[]');
+    const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+    const categories = JSON.parse(localStorage.getItem('categories') || '[]');
+    const units = JSON.parse(localStorage.getItem('units') || '[]');
+    const storeUnits = JSON.parse(localStorage.getItem('storeUnits') || '[]');
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
+
+    const allData = {
+      products,
+      transactions,
+      debts,
+      cashIn,
+      expenses,
+      categories,
+      units,
+      storeUnits,
+      users,
+      sessions
+    };
+
+    return sendToGoogleSheets('autoSyncAllData', allData);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal auto-sync: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fungsi sync data spesifik ke Google Sheets
+export const syncDataToSheets = async (dataType: string, data: any[]): Promise<GoogleSheetsResponse> => {
+  try {
+    const payload = {
+      type: dataType,
+      data: data
+    };
+
+    return sendToGoogleSheets('syncSpecificData', payload);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal sync ${dataType}: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fungsi sync transaksi real-time
+export const syncTransactionToSheets = async (transaction: any): Promise<GoogleSheetsResponse> => {
+  try {
+    return sendToGoogleSheets('syncTransaction', { transaction });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal sync transaksi: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fungsi sync produk real-time
+export const syncProductToSheets = async (product: any): Promise<GoogleSheetsResponse> => {
+  try {
+    return sendToGoogleSheets('syncProduct', { product });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal sync produk: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fungsi sync piutang real-time
+export const syncDebtToSheets = async (debt: any): Promise<GoogleSheetsResponse> => {
+  try {
+    return sendToGoogleSheets('syncDebt', { debt });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal sync piutang: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fungsi sync kas masuk real-time
+export const syncCashInToSheets = async (cashIn: any): Promise<GoogleSheetsResponse> => {
+  try {
+    return sendToGoogleSheets('syncCashIn', { cashIn });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal sync kas masuk: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};
+
+// Fungsi sync pengeluaran real-time
+export const syncExpenseToSheets = async (expense: any): Promise<GoogleSheetsResponse> => {
+  try {
+    return sendToGoogleSheets('syncExpense', { expense });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+    toast.error(`Gagal sync pengeluaran: ${errorMessage}`);
+    return { success: false, error: errorMessage };
+  }
+};

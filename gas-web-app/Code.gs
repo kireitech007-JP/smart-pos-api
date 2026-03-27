@@ -103,6 +103,69 @@ function doPost(e) {
       case 'testConnection':
         result = handleTestConnection();
         break;
+      case 'autoSyncAllData':
+        result = handleAutoSyncAllData(data.data);
+        break;
+      case 'syncSpecificData':
+        result = handleSyncSpecificData(data.type, data.data);
+        break;
+      case 'syncTransaction':
+        result = handleSyncTransaction(data.transaction);
+        break;
+      case 'syncProduct':
+        result = handleSyncProduct(data.product);
+        break;
+      case 'syncDebt':
+        result = handleSyncDebt(data.debt);
+        break;
+      case 'syncCashIn':
+        result = handleSyncCashIn(data.cashIn);
+        break;
+      case 'syncExpense':
+        result = handleSyncExpense(data.expense);
+        break;
+      case 'backupKategori':
+        result = handleBackupKategori(data.kategori);
+        break;
+      case 'backupSatuan':
+        result = handleBackupSatuan(data.satuan);
+        break;
+      case 'backupProduk':
+        result = handleBackupProduk(data.produk);
+        break;
+      case 'backupPengguna':
+        result = handleBackupPengguna(data.pengguna);
+        break;
+      case 'backupUnit':
+        result = handleBackupUnit(data.unit);
+        break;
+      case 'backupTransaksi':
+        result = handleBackupTransaksi(data.transaksi);
+        break;
+      case 'backupTransaksiItems':
+        result = handleBackupTransaksiItems(data.items);
+        break;
+      case 'backupPiutang':
+        result = handleBackupPiutang(data.piutang);
+        break;
+      case 'backupKasMasuk':
+        result = handleBackupKasMasuk(data.kasMasuk);
+        break;
+      case 'backupPengeluaran':
+        result = handleBackupPengeluaran(data.pengeluaran);
+        break;
+      case 'backupLaporan':
+        result = handleBackupLaporan(data.laporan);
+        break;
+      case 'backupSessions':
+        result = handleBackupSessions(data.sessions);
+        break;
+      case 'testBackupConnection':
+        result = handleTestBackupConnection();
+        break;
+      case 'clearAllData':
+        result = handleClearAllData();
+        break;
       default:
         throw new Error(`Unknown action: ${data.action}`);
     }
@@ -880,6 +943,712 @@ function setupSpreadsheet() {
     return {
       success: true,
       message: "Spreadsheet setup completed",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle auto-sync semua data
+ */
+function handleAutoSyncAllData(data) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    // Sync semua data ke sheets
+    if (data.products && data.products.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.PRODUK, data.products);
+    }
+    if (data.transactions && data.transactions.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.TRANSAKSI, data.transactions);
+    }
+    if (data.debts && data.debts.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.PIUTANG, data.debts);
+    }
+    if (data.cashIn && data.cashIn.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.KAS_MASUK, data.cashIn);
+    }
+    if (data.expenses && data.expenses.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.PENGELUARAN, data.expenses);
+    }
+    if (data.categories && data.categories.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.KATEGORI, data.categories);
+    }
+    if (data.units && data.units.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.SATUAN, data.units);
+    }
+    if (data.storeUnits && data.storeUnits.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.UNIT, data.storeUnits);
+    }
+    if (data.users && data.users.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.PENGGUNA, data.users);
+    }
+    if (data.sessions && data.sessions.length > 0) {
+      backupToSheet(spreadsheet, SHEET_NAMES.SESSIONS, data.sessions);
+    }
+
+    return {
+      success: true,
+      message: "Auto-sync semua data berhasil ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle sync data spesifik
+ */
+function handleSyncSpecificData(type, data) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheetName = '';
+    
+    switch (type) {
+      case 'products':
+        sheetName = SHEET_NAMES.PRODUK;
+        break;
+      case 'transactions':
+        sheetName = SHEET_NAMES.TRANSAKSI;
+        break;
+      case 'debts':
+        sheetName = SHEET_NAMES.PIUTANG;
+        break;
+      case 'cashIn':
+        sheetName = SHEET_NAMES.KAS_MASUK;
+        break;
+      case 'expenses':
+        sheetName = SHEET_NAMES.PENGELUARAN;
+        break;
+      case 'categories':
+        sheetName = SHEET_NAMES.KATEGORI;
+        break;
+      case 'units':
+        sheetName = SHEET_NAMES.SATUAN;
+        break;
+      case 'storeUnits':
+        sheetName = SHEET_NAMES.UNIT;
+        break;
+      case 'users':
+        sheetName = SHEET_NAMES.PENGGUNA;
+        break;
+      case 'sessions':
+        sheetName = SHEET_NAMES.SESSIONS;
+        break;
+      default:
+        throw new Error(`Unknown data type: ${type}`);
+    }
+    
+    backupToSheet(spreadsheet, sheetName, data);
+    
+    return {
+      success: true,
+      message: `Data ${type} berhasil di-sync ke Google Sheets`,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle sync transaksi real-time
+ */
+function handleSyncTransaction(transaction) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = spreadsheet.getSheetByName(SHEET_NAMES.TRANSAKSI);
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(SHEET_NAMES.TRANSAKSI);
+      // Add headers
+      const headers = ['id', 'date', 'cashier_name', 'customer_name', 'customer_phone', 'subtotal', 'discount', 'tax', 'grand_total', 'payment_type', 'cash_paid', 'cash_change', 'dp', 'unit_id', 'unit_name', 'cashier_id', 'created_at', 'updated_at'];
+      sheet.appendRow(headers);
+    }
+    
+    // Check if transaction already exists
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    let existingIndex = -1;
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] == transaction.id) {
+        existingIndex = i;
+        break;
+      }
+    }
+    
+    // Add timestamp
+    transaction.created_at = transaction.created_at || new Date().toISOString();
+    transaction.updated_at = new Date().toISOString();
+    
+    // Prepare row data
+    const row = headers.map(header => transaction[header] || '');
+    
+    if (existingIndex >= 0) {
+      // Update existing transaction
+      sheet.getRange(existingIndex + 1, 1, 1, row.length).setValues([row]);
+    } else {
+      // Add new transaction
+      sheet.appendRow(row);
+    }
+    
+    return {
+      success: true,
+      message: "Transaksi berhasil di-sync ke Google Sheets",
+      data: transaction,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle sync produk real-time
+ */
+function handleSyncProduct(product) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = spreadsheet.getSheetByName(SHEET_NAMES.PRODUK);
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(SHEET_NAMES.PRODUK);
+      // Add headers
+      const headers = ['id', 'supplier', 'name', 'unit', 'unitId', 'satuan', 'hpp', 'price', 'initialStock', 'addedStock', 'soldStock', 'updatedAt', 'sku', 'category_id', 'min_stock', 'unit_store_id'];
+      sheet.appendRow(headers);
+    }
+    
+    // Check if product already exists
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    let existingIndex = -1;
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] == product.id) {
+        existingIndex = i;
+        break;
+      }
+    }
+    
+    // Add timestamp
+    product.updatedAt = product.updatedAt || new Date().toISOString();
+    
+    // Prepare row data
+    const row = headers.map(header => product[header] || '');
+    
+    if (existingIndex >= 0) {
+      // Update existing product
+      sheet.getRange(existingIndex + 1, 1, 1, row.length).setValues([row]);
+    } else {
+      // Add new product
+      sheet.appendRow(row);
+    }
+    
+    return {
+      success: true,
+      message: "Produk berhasil di-sync ke Google Sheets",
+      data: product,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle sync piutang real-time
+ */
+function handleSyncDebt(debt) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = spreadsheet.getSheetByName(SHEET_NAMES.PIUTANG);
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(SHEET_NAMES.PIUTANG);
+      // Add headers
+      const headers = ['id', 'transactionId', 'customerName', 'customerPhone', 'totalAmount', 'dpAmount', 'remainingAmount', 'date', 'unitId', 'unitName', 'status', 'payments'];
+      sheet.appendRow(headers);
+    }
+    
+    // Check if debt already exists
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    let existingIndex = -1;
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] == debt.id) {
+        existingIndex = i;
+        break;
+      }
+    }
+    
+    // Prepare row data
+    const row = headers.map(header => {
+      if (header === 'payments') {
+        return JSON.stringify(debt[header] || []);
+      }
+      return debt[header] || '';
+    });
+    
+    if (existingIndex >= 0) {
+      // Update existing debt
+      sheet.getRange(existingIndex + 1, 1, 1, row.length).setValues([row]);
+    } else {
+      // Add new debt
+      sheet.appendRow(row);
+    }
+    
+    return {
+      success: true,
+      message: "Piutang berhasil di-sync ke Google Sheets",
+      data: debt,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle sync kas masuk real-time
+ */
+function handleSyncCashIn(cashIn) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = spreadsheet.getSheetByName(SHEET_NAMES.KAS_MASUK);
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(SHEET_NAMES.KAS_MASUK);
+      // Add headers
+      const headers = ['id', 'date', 'description', 'amount', 'depositorName', 'unitId', 'unitName', 'cashierId', 'cashierName', 'sessionId'];
+      sheet.appendRow(headers);
+    }
+    
+    // Check if cash in already exists
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    let existingIndex = -1;
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] == cashIn.id) {
+        existingIndex = i;
+        break;
+      }
+    }
+    
+    // Prepare row data
+    const row = headers.map(header => cashIn[header] || '');
+    
+    if (existingIndex >= 0) {
+      // Update existing cash in
+      sheet.getRange(existingIndex + 1, 1, 1, row.length).setValues([row]);
+    } else {
+      // Add new cash in
+      sheet.appendRow(row);
+    }
+    
+    return {
+      success: true,
+      message: "Kas masuk berhasil di-sync ke Google Sheets",
+      data: cashIn,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle sync pengeluaran real-time
+ */
+function handleSyncExpense(expense) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = spreadsheet.getSheetByName(SHEET_NAMES.PENGELUARAN);
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(SHEET_NAMES.PENGELUARAN);
+      // Add headers
+      const headers = ['id', 'date', 'description', 'amount', 'unitId', 'cashierId'];
+      sheet.appendRow(headers);
+    }
+    
+    // Check if expense already exists
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    let existingIndex = -1;
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] == expense.id) {
+        existingIndex = i;
+        break;
+      }
+    }
+    
+    // Prepare row data
+    const row = headers.map(header => expense[header] || '');
+    
+    if (existingIndex >= 0) {
+      // Update existing expense
+      sheet.getRange(existingIndex + 1, 1, 1, row.length).setValues([row]);
+    } else {
+      // Add new expense
+      sheet.appendRow(row);
+    }
+    
+    return {
+      success: true,
+      message: "Pengeluaran berhasil di-sync ke Google Sheets",
+      data: expense,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup kategori
+ */
+function handleBackupKategori(kategori) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.KATEGORI, kategori);
+    
+    return {
+      success: true,
+      message: "Kategori berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup satuan
+ */
+function handleBackupSatuan(satuan) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.SATUAN, satuan);
+    
+    return {
+      success: true,
+      message: "Satuan berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup produk
+ */
+function handleBackupProduk(produk) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.PRODUK, produk);
+    
+    return {
+      success: true,
+      message: "Produk berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup pengguna
+ */
+function handleBackupPengguna(pengguna) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.PENGGUNA, pengguna);
+    
+    return {
+      success: true,
+      message: "Pengguna berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup unit
+ */
+function handleBackupUnit(unit) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.UNIT, unit);
+    
+    return {
+      success: true,
+      message: "Unit berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup transaksi
+ */
+function handleBackupTransaksi(transaksi) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.TRANSAKSI, transaksi);
+    
+    return {
+      success: true,
+      message: "Transaksi berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup transaksi items
+ */
+function handleBackupTransaksiItems(items) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.TRANSAKSI_ITEMS, items);
+    
+    return {
+      success: true,
+      message: "Transaksi items berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup piutang
+ */
+function handleBackupPiutang(piutang) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.PIUTANG, piutang);
+    
+    return {
+      success: true,
+      message: "Piutang berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup kas masuk
+ */
+function handleBackupKasMasuk(kasMasuk) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.KAS_MASUK, kasMasuk);
+    
+    return {
+      success: true,
+      message: "Kas masuk berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup pengeluaran
+ */
+function handleBackupPengeluaran(pengeluaran) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.PENGELUARAN, pengeluaran);
+    
+    return {
+      success: true,
+      message: "Pengeluaran berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup laporan
+ */
+function handleBackupLaporan(laporan) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.LAPORAN, laporan);
+    
+    return {
+      success: true,
+      message: "Laporan berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle backup sessions
+ */
+function handleBackupSessions(sessions) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    backupToSheet(spreadsheet, SHEET_NAMES.SESSIONS, sessions);
+    
+    return {
+      success: true,
+      message: "Sessions berhasil di-backup ke Google Sheets",
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle test backup connection
+ */
+function handleTestBackupConnection() {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetName = spreadsheet.getSheetName();
+    
+    return {
+      success: true,
+      message: "Koneksi Google Apps Script (Backup) berhasil!",
+      spreadsheetId: SPREADSHEET_ID,
+      sheetName: sheetName,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Handle clear all data
+ */
+function handleClearAllData() {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetNames = Object.values(SHEET_NAMES);
+    
+    sheetNames.forEach(sheetName => {
+      const sheet = spreadsheet.getSheetByName(sheetName);
+      if (sheet) {
+        sheet.clear();
+      }
+    });
+    
+    return {
+      success: true,
+      message: "Semua data berhasil di-clear dari Google Sheets",
       timestamp: new Date().toISOString()
     };
   } catch (error) {

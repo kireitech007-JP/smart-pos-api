@@ -1,4 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { 
+  autoSyncToSheets,
+  syncTransactionToSheets,
+  syncProductToSheets,
+  syncDebtToSheets,
+  syncCashInToSheets,
+  syncExpenseToSheets
+} from '@/lib/googleSheets';
 
 export interface Product {
   id: string;
@@ -315,14 +323,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         cart: [],
       };
     });
+    
+    // Auto-sync ke Google Sheets
+    syncTransactionToSheets(newTx).catch(error => {
+      console.error('Failed to sync transaction to sheets:', error);
+    });
+    
     return newTx;
   }, []);
 
   const addDebt = useCallback((debt: Omit<Debt, 'id' | 'payments' | 'status'>) => {
+    const newDebt = { ...debt, id: genId(), payments: [], status: 'unpaid' as const };
     setState(p => ({
       ...p,
-      debts: [...p.debts, { ...debt, id: genId(), payments: [], status: 'unpaid' }],
+      debts: [...p.debts, newDebt],
     }));
+    
+    // Auto-sync ke Google Sheets
+    syncDebtToSheets(newDebt).catch(error => {
+      console.error('Failed to sync debt to sheets:', error);
+    });
   }, []);
 
   const payDebt = useCallback((debtId: string, amount: number) => {
@@ -344,8 +364,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addExpense = useCallback((expense: Omit<Expense, 'id'>) => {
+    const newExp = { ...expense, id: genId() };
     setState(p => {
-      const newExp = { ...expense, id: genId() };
       const updatedSessions = p.cashierSessions.map(s => {
         if (s.cashierId === expense.cashierId && s.isOpen) {
           return { ...s, expenses: [...s.expenses, newExp.id] };
@@ -354,11 +374,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       return { ...p, expenses: [...p.expenses, newExp], cashierSessions: updatedSessions };
     });
+    
+    // Auto-sync ke Google Sheets
+    syncExpenseToSheets(newExp).catch(error => {
+      console.error('Failed to sync expense to sheets:', error);
+    });
   }, []);
 
   const addCashIn = useCallback((cashIn: Omit<CashIn, 'id'>) => {
+    const newCashIn = { ...cashIn, id: genId() };
     setState(p => {
-      const newCashIn = { ...cashIn, id: genId() };
       const updatedSessions = p.cashierSessions.map(s => {
         if (s.id === cashIn.sessionId) {
           return { ...s, cashIns: [...(s.cashIns || []), newCashIn.id] };
@@ -366,6 +391,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return s;
       });
       return { ...p, cashIns: [...p.cashIns, newCashIn], cashierSessions: updatedSessions };
+    });
+    
+    // Auto-sync ke Google Sheets
+    syncCashInToSheets(newCashIn).catch(error => {
+      console.error('Failed to sync cash in to sheets:', error);
     });
   }, []);
 
