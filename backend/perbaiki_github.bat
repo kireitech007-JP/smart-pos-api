@@ -2,19 +2,26 @@
 SET GIT_PATH="c:\Users\JP Production\AppData\Local\GitHubDesktop\app-3.5.6\resources\app\git\cmd\git.exe"
 cd "C:\Users\JP Production\Documents\GitHub\smart-retail-pos\backend"
 
-echo 1. Membersihkan cache Git...
-%GIT_PATH% rm -r --cached . >nul 2>&1
+echo 1. Menghapus folder .git lama (untuk reset total)...
+rmdir /s /q .git >nul 2>&1
 
-echo 2. Menambahkan semua folder (app, bootstrap, routes, dll)...
+echo 2. Inisialisasi Git baru...
+%GIT_PATH% init
+
+echo 3. Mengatur remote ke repositori yang benar...
+%GIT_PATH% remote add origin https://github.com/kireitech007-JP/smart-pos-api.git
+
+echo 4. Menambahkan SEMUA file proyek Laravel...
 %GIT_PATH% add . -f
 
-echo 3. Melakukan commit...
-%GIT_PATH% commit -m "FIX: Sinkronisasi total semua folder Laravel"
+echo 5. Melakukan commit pertama...
+%GIT_PATH% commit -m "Initial commit: Full Laravel Backend"
 
-echo 4. Mengirim ke GitHub branch main...
-%GIT_PATH% push origin main --force
+echo 6. Mengirim ke GitHub (branch main)...
+%GIT_PATH% push origin master:main --force
 
 echo.
-echo Selesai! Silakan cek website GitHub Anda.
-echo Pastikan folder 'bootstrap' dan 'routes' sudah muncul.
+echo SELESAI! 
+echo Silakan buka: https://github.com/kireitech007-JP/smart-pos-api
+echo Pastikan file 'composer.json' dan folder 'app' sudah terlihat di sana.
 pause
