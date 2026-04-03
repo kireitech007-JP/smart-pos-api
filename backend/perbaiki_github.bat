@@ -2,17 +2,19 @@
 SET GIT_PATH="c:\Users\JP Production\AppData\Local\GitHubDesktop\app-3.5.6\resources\app\git\cmd\git.exe"
 cd "C:\Users\JP Production\Documents\GitHub\smart-retail-pos\backend"
 
-echo Membersihkan index git...
-%GIT_PATH% rm -r --cached .
+echo 1. Membersihkan cache Git...
+%GIT_PATH% rm -r --cached . >nul 2>&1
 
-echo Menambah SEMUA file proyek Laravel...
+echo 2. Menambahkan semua folder (app, bootstrap, routes, dll)...
 %GIT_PATH% add . -f
 
-echo Melakukan commit...
-%GIT_PATH% commit -m "FIX: Memastikan semua folder (bootstrap, routes, app, dll) masuk ke repositori"
+echo 3. Melakukan commit...
+%GIT_PATH% commit -m "FIX: Sinkronisasi total semua folder Laravel"
 
-echo Mengirim ke GitHub (branch main)...
-%GIT_PATH% push origin master:main --force
+echo 4. Mengirim ke GitHub branch main...
+%GIT_PATH% push origin main --force
 
-echo Selesai! Silakan cek di website GitHub folder 'routes' dan 'bootstrap' sudah ada.
+echo.
+echo Selesai! Silakan cek website GitHub Anda.
+echo Pastikan folder 'bootstrap' dan 'routes' sudah muncul.
 pause
